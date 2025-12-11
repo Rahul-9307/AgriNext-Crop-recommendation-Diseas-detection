@@ -4,18 +4,17 @@ import numpy as np
 import os
 from PIL import Image
 
+# -----------------------------------------------------------
+# PAGE CONFIG
+# -----------------------------------------------------------
 st.set_page_config(page_title="AgriNext – स्मार्ट रोग निदान", layout="centered")
 
 # -----------------------------------------------------------
-# CUSTOM CSS FOR UI
+# CUSTOM CSS
 # -----------------------------------------------------------
 st.markdown("""
 <style>
-
-h1, h2, h3, h4 {
-    text-align:center;
-    font-family: 'Poppins', sans-serif;
-}
+h1, h2, h3, h4 { text-align:center; font-family:'Poppins', sans-serif; }
 
 .gradient-btn {
     background: linear-gradient(90deg, #6A5ACD, #00B4D8);
@@ -54,29 +53,33 @@ h1, h2, h3, h4 {
 """, unsafe_allow_html=True)
 
 
+
 # -----------------------------------------------------------
-# MODEL LOADING
+# MODEL LOAD FUNCTION (SAFE + NEW API)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
 
     current_dir = os.path.dirname(__file__)
-    model_path = os.path.join(current_dir, "trained_plant_disease_model.keras")
+    keras_path = os.path.join(current_dir, "trained_plant_disease_model.keras")
+    h5_path = os.path.join(current_dir, "trained_plant_disease_model.h5")
 
-    if not os.path.exists(model_path):
-        model_path = os.path.join(current_dir, "trained_plant_disease_model.h5")
+    if os.path.exists(keras_path):
+        return tf.keras.models.load_model(keras_path)
 
-    if not os.path.exists(model_path):
-        return None
+    if os.path.exists(h5_path):
+        return tf.keras.models.load_model(h5_path)
 
-    return tf.keras.models.load_model(model_path)
+    return None
+
 
 
 model = load_model()
 
 
+
 # -----------------------------------------------------------
-# PREDICT FUNCTION
+# PREDICTION FUNCTION
 # -----------------------------------------------------------
 def predict_image(image_path):
     img = tf.keras.preprocessing.image.load_img(image_path, target_size=(128,128))
@@ -86,18 +89,18 @@ def predict_image(image_path):
     return np.argmax(result)
 
 
+
 # -----------------------------------------------------------
 # HEADER
 # -----------------------------------------------------------
 st.markdown("<h1>🌾 AgriNext – स्मार्ट वनस्पती रोग निदान</h1>", unsafe_allow_html=True)
-
 st.write("___")
 
-# -----------------------------------------------------------
-# FILE UPLOAD
-# -----------------------------------------------------------
-st.markdown("<h3>📸 कृपया वनस्पतीच्या पानाचा फोटो अपलोड करा</h3>", unsafe_allow_html=True)
 
+# -----------------------------------------------------------
+# FILE UPLOAD SECTION
+# -----------------------------------------------------------
+st.markdown("<h3>📸 कृपया पानाचा फोटो अपलोड करा</h3>", unsafe_allow_html=True)
 uploaded = st.file_uploader("", type=["jpg", "png", "jpeg"])
 
 
@@ -107,22 +110,21 @@ if uploaded:
     st.image(uploaded, use_column_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Temporary Save
+    # save temporarily
     temp_path = "temp_input.jpg"
     with open(temp_path, "wb") as f:
         f.write(uploaded.getbuffer())
 
-    # Gradient button
-    predict_btn = st.button("🔍 रोग ओळखा", key="predictbtn")
-
-    if predict_btn:
-
-        # Animated Loader
+    # Predict Button
+    if st.button("🔍 रोग ओळखा", key="predictbtn"):
+        
+        # Loader animation
         loader_gif = "https://i.gifer.com/ZZ5H.gif"
         st.markdown(f"<center><img src='{loader_gif}' width='140'></center>", unsafe_allow_html=True)
 
         if model is None:
-            st.error("❌ मॉडेल फाइल मिळाली नाही!")
+            st.error("❌ मॉडेल फाइल मिळाली नाही! कृपया GitHub मध्ये फाइल योग्यरित्या अपलोड करा.")
+
         else:
             idx = predict_image(temp_path)
 
@@ -153,7 +155,7 @@ if uploaded:
 
             # Result Card
             st.markdown("<div class='result-card'>", unsafe_allow_html=True)
-            st.markdown(f"<h3>🌱 ओळखलेला रोग:</h3>", unsafe_allow_html=True)
+            st.markdown("<h3>🌱 ओळखलेला रोग</h3>", unsafe_allow_html=True)
             st.markdown(f"<h2 style='color:#2E8B57;'>✅ {class_name[idx]}</h2>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -162,7 +164,7 @@ else:
 
 
 # -----------------------------------------------------------
-# FOOTER – AgriNext Team Section
+# FOOTER – AGRINEXT TEAM
 # -----------------------------------------------------------
 st.markdown("""
 <div class='footer-box'>
@@ -170,14 +172,14 @@ st.markdown("""
 <p>
 AgriNext हे शेतकऱ्यांसाठी अत्याधुनिक तंत्रज्ञान वापरून तयार केलेले प्लॅटफॉर्म आहे.  
 आमचे ध्येय –  
-<strong>“प्रत्येक शेतकऱ्याला स्मार्ट शेतीची सुविधा देणे.”</strong>  
-<br><br>
+<strong>“प्रत्येक शेतकऱ्याला स्मार्ट शेतीची सुविधा देणे.”</strong><br><br>
+
 🔸 AI आधारित रोग निदान  
 🔸 पिक सल्ला  
 🔸 स्थानिक भाषेत मार्गदर्शन  
 🔸 शेत पातळीवरील निर्णय सहाय्य  
-<br><br>
-<b>टीम:</b><br>
+
+<br><b>टीम:</b><br>
 • Rahul Patil (Developer)<br>
 • AgriNext Research & Advisory Team
 </p>
