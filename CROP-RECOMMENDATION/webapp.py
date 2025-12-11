@@ -50,6 +50,7 @@ def main():
     st.title("AgriNext - Smart Crop Recommendation")
 
     # SIDEBAR
+    st.sidebar.title("Agri🌾Next")
     st.sidebar.title("Enter Crop Details")
 
     nitrogen = st.sidebar.number_input("Nitrogen (N)", 0.0, 140.0, 0.0)
@@ -86,3 +87,4 @@ def main():
 # RUN APP
 if __name__ == "__main__":
     main()
+
