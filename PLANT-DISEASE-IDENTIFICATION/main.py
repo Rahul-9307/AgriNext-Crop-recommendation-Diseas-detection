@@ -85,8 +85,8 @@ def load_model():
         if target_name in files:
             found_path = os.path.join(root, target_name)
             break
-            
- st.write("🔍 Searching for model...")
+
+    st.write("🔍 Searching for model...")
 
     if found_path:
         st.success(f"✅ Model Found at: {found_path}")
@@ -174,5 +174,6 @@ st.markdown("""
 Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
+
 
 
