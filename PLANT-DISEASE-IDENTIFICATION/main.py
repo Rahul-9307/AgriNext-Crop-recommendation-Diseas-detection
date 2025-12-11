@@ -10,12 +10,13 @@ from PIL import Image
 st.set_page_config(page_title="AgriSens", layout="wide")
 
 # -----------------------------------------------------------
-# IMAGE PATHS (LOCAL FILES)
+# GITHUB RAW IMAGES (WORKS 100% ON STREAMLIT CLOUD)
 # -----------------------------------------------------------
-HERO_IMAGE = "Diseases.png"
-IMG_REALTIME = "Real-Time Results.png"
-IMG_INSIGHTS = "Actionable Insights.png"
-IMG_DETECTION = "Disease Detection.png"
+HERO_IMAGE = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Diseases.png"
+
+IMG_REALTIME = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Real-Time%20Results.png"
+IMG_INSIGHTS = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Actionable%20Insights.png"
+IMG_DETECTION = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Disease%20Detection.png"
 
 # -----------------------------------------------------------
 # HERO CSS
@@ -37,7 +38,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------
-# HERO IMAGE
+# HERO IMAGE DISPLAY
 # -----------------------------------------------------------
 st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
 st.image(HERO_IMAGE, use_column_width=True)
@@ -47,10 +48,10 @@ st.write("")
 st.write("")
 
 # -----------------------------------------------------------
-# PAGE SELECTOR (CENTER)
+# PAGE SELECTOR (CENTER DROPDOWN)
 # -----------------------------------------------------------
-colA = st.columns(3)
-with colA[1]:
+cols = st.columns(3)
+with cols[1]:
     page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
 
 # -----------------------------------------------------------
@@ -62,7 +63,6 @@ if page == "HOME":
     <h1 class='center-text' style='color:#2ecc71; font-weight:800; margin-top:20px;'>
         AgriSens: Smart Disease Detection
     </h1>
-
     <p class='center-text' style='color:#ccc; font-size:18px;'>
         Empowering farmers with AI-powered plant disease recognition.<br>
         Upload leaf images to detect diseases accurately and access actionable insights.
@@ -76,23 +76,23 @@ if page == "HOME":
     with col1:
         st.image(IMG_REALTIME, use_column_width=True)
         st.markdown("<p class='center-text'><b>Real-Time Results</b></p>", unsafe_allow_html=True)
-        st.write("Instant predictions using AI.")
+        st.write("Instant predictions using powerful AI models.")
 
     with col2:
         st.image(IMG_INSIGHTS, use_column_width=True)
         st.markdown("<p class='center-text'><b>Actionable Insights</b></p>", unsafe_allow_html=True)
-        st.write("Know disease details and remedies.")
+        st.write("Know disease details and recommended remedies.")
 
     with col3:
         st.image(IMG_DETECTION, use_column_width=True)
         st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
-        st.write("Identify plant diseases effortlessly.")
+        st.write("Detect plant diseases with a single image.")
 
     st.write("## How It Works")
     st.markdown("""
     1. Go to the **Disease Recognition** page.<br>
     2. Upload a leaf image.<br>
-    3. Get instant AI-based results.<br>
+    3. Get instant detection and suggested actions.<br>
     """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------
@@ -107,9 +107,10 @@ elif page == "DISEASE RECOGNITION":
 
     @st.cache_resource
     def load_model():
-        if os.path.exists("trained_plant_disease_model.keras"):
-            return tf.keras.models.load_model("trained_plant_disease_model.keras")
-        st.error("❌ Model not found!")
+        model_path = "trained_plant_disease_model.keras"
+        if os.path.exists(model_path):
+            return tf.keras.models.load_model(model_path)
+        st.error("❌ Model file not found!")
         return None
 
     model = load_model()
@@ -123,6 +124,7 @@ elif page == "DISEASE RECOGNITION":
     uploaded = st.file_uploader("📸 Upload Leaf Image", type=["jpg", "jpeg", "png"])
 
     if uploaded:
+
         st.image(uploaded, use_column_width=True)
 
         temp_path = "uploaded_temp.jpg"
@@ -131,8 +133,12 @@ elif page == "DISEASE RECOGNITION":
 
         if st.button("🔍 Detect Disease"):
             st.info("⏳ Processing...")
-            idx = predict_image(temp_path)
-            st.success(f"🌱 Predicted Class Index: **{idx}**")
+
+            if model:
+                idx = predict_image(temp_path)
+                st.success(f"🌱 Predicted Disease Class Index: **{idx}**")
+            else:
+                st.error("❌ Model not loaded!")
 
 # -----------------------------------------------------------
 # FOOTER
