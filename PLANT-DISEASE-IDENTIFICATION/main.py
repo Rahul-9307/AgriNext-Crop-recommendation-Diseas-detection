@@ -79,4 +79,56 @@ elif app_mode == "DISEASE RECOGNITION":
                 'Tomato___healthy'
             ]
 
-            st.success(f"Model is predicting it's **{class_name[result_index]}** 🌿")
+            predicted_label = class_name[result_index]
+            st.success(f"Model is predicting it's **{predicted_label}** 🌿")
+
+            # --------------------------------------
+            # AUTO-FERTILIZER RECOMMENDATION CARD
+            # --------------------------------------
+            st.markdown("""
+            <div style='padding:20px; border-radius:18px; background:#f5faff;
+                        box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family: Poppins;'>
+
+                <h2 style='color:#2b6a4b; text-align:center;'>🌱 Auto-Fertilizer Recommendation</h2>
+
+                <div style='margin-top:15px;'>
+                    <h3 style='color:#d35400;'>🍅 Disease: Tomato Early Blight</h3>
+                </div>
+
+                <div style='background:white; padding:15px; border-radius:12px; margin-top:10px;'>
+                    <h4 style='color:#2c3e50;'>🧪 Fungicide Treatment</h4>
+                    <p><b>Mancozeb 75% WP</b><br>
+                    Quantity: <b>2g per liter</b><br>
+                    Frequency: <b>Every 7 days</b><br>
+                    Duration: <b>2–3 cycles</b></p>
+                </div>
+
+                <div style='background:white; padding:15px; border-radius:12px; margin-top:10px;'>
+                    <h4 style='color:#2c3e50;'>🌿 Nutrient Booster</h4>
+                    <p><b>NPK 19:19:19</b><br>
+                    Quantity: <b>5g per liter</b><br>
+                    Timing: <b>After 3 days of fungicide spray</b></p>
+                </div>
+
+                <div style='background:white; padding:15px; border-radius:12px; margin-top:10px;'>
+                    <h4 style='color:#2c3e50;'>🌱 Soil Reviver</h4>
+                    <p><b>Trichoderma viride</b><br>
+                    5 kg/acre mixed with FYM</p>
+                </div>
+
+                <div style='background:#e8f8f5; padding:15px; border-radius:12px; margin-top:10px;'>
+                    <h4 style='color:#117864;'>🌤️ Weather Precautions</h4>
+                    <ul>
+                        <li>Humidity > 80% = High infection risk</li>
+                        <li>Avoid spraying during rain/wind</li>
+                        <li>Prefer early morning/evening</li>
+                    </ul>
+                </div>
+
+                <div style='margin-top:20px; padding:15px; background:#fff3cd; border-radius:12px;'>
+                    <h4 style='color:#856404;'>🗓 Next Spray Reminder</h4>
+                    Spray again after <b>7 days</b>.
+                </div>
+
+            </div>
+            """, unsafe_allow_html=True)
