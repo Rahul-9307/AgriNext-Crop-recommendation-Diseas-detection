@@ -11,7 +11,7 @@ st.set_page_config(page_title="AgriSens", layout="wide")
 
 
 # -----------------------------------------------------------
-# RAW IMAGE LINKS (GitHub RAW WORKS 100% ON CLOUD)
+# RAW IMAGE LINKS (Always work on Streamlit Cloud)
 # -----------------------------------------------------------
 HERO_IMAGE = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Diseases.png"
 
@@ -21,7 +21,7 @@ IMG_DETECTION = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOM
 
 
 # -----------------------------------------------------------
-# HERO CSS
+# HERO IMAGE CSS
 # -----------------------------------------------------------
 st.markdown("""
 <style>
@@ -33,9 +33,7 @@ st.markdown("""
     margin-top: 10px;
     box-shadow: 0px 0px 15px rgba(0,255,150,0.25);
 }
-.center-text {
-    text-align: center;
-}
+.center-text { text-align:center; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -47,9 +45,6 @@ st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
 st.image(HERO_IMAGE, use_column_width=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-st.write("")
-st.write("")
-
 
 # -----------------------------------------------------------
 # CENTER PAGE SELECTOR
@@ -60,24 +55,33 @@ with col[1]:
 
 
 # -----------------------------------------------------------
-# MODEL LOADER (100% FIXED)
+# UNIVERSAL MODEL LOADER (AUTO-FIND ANYWHERE)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
 
-    # Absolute path ensures Cloud + Local both work
-    model_path = os.path.join(os.path.dirname(__file__), "trained_plant_disease_model.keras")
+    target_name = "trained_plant_disease_model.keras"
+    found_path = None
 
-    st.write("📁 Model Path:", model_path)  # DEBUG (you can remove later)
+    # Scan FULL project directory (root + subfolders)
+    for root, dirs, files in os.walk(".", topdown=True):
+        if target_name in files:
+            found_path = os.path.join(root, target_name)
+            break
 
-    if os.path.exists(model_path):
-        return tf.keras.models.load_model(model_path)
+    st.write("🔍 Searching Model in Project...")
 
-    st.error("❌ Model file NOT FOUND! Please check file name & location.")
+    if found_path:
+        st.success(f"✅ Model Found at: {found_path}")
+        return tf.keras.models.load_model(found_path)
+
+    st.error("❌ Model file NOT FOUND! Put trained_plant_disease_model.keras in repo.")
+    st.write("📁 Available files:", os.listdir("."))
     return None
 
 
 model = load_model()
+
 
 
 # -----------------------------------------------------------
@@ -115,8 +119,9 @@ if page == "HOME":
     st.markdown("""
     1. Select **Disease Recognition** page.<br>
     2. Upload a leaf image.<br>
-    3. Get instant detection.<br>
+    3. Get instant prediction and insights.<br>
     """, unsafe_allow_html=True)
+
 
 
 # -----------------------------------------------------------
@@ -153,6 +158,7 @@ elif page == "DISEASE RECOGNITION":
                 st.info("⏳ Processing...")
                 idx = predict_image(temp_path)
                 st.success(f"🌱 Predicted Class Index: **{idx}**")
+
 
 
 # -----------------------------------------------------------
