@@ -11,29 +11,24 @@ st.set_page_config(page_title="AgriNext – स्मार्ट रोग न�
 
 
 # -----------------------------------------------------------
-# AUTO-DETECT MODEL FILE (WORKS 100%)
+# FINAL CLEAN MODEL LOADER (AUTO-DETECT, NO DEBUG)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
 
-    # Search model inside current folder & all subfolders
     model_name = "trained_plant_disease_model.keras"
     found_path = None
 
+    # Search for model in all subfolders (silently)
     for root, dirs, files in os.walk(".", topdown=True):
         if model_name in files:
             found_path = os.path.join(root, model_name)
             break
 
-    # Debug (shows where model is found)
-    st.write("🔍 Searching model in folders...")
-    st.write("📂 Files:", os.listdir("."))
-
     if found_path:
-        st.success(f"✔ Model Found at: {found_path}")
         return tf.keras.models.load_model(found_path)
 
-    st.error("❌ Model file NOT found! Please keep trained_plant_disease_model.keras anywhere inside project.")
+    st.error("❌ Model file NOT found! Add trained_plant_disease_model.keras inside project.")
     return None
 
 
@@ -43,8 +38,8 @@ model = load_model()
 # -----------------------------------------------------------
 # PREDICT FUNCTION
 # -----------------------------------------------------------
-def predict_image(image_path):
-    img = tf.keras.preprocessing.image.load_img(image_path, target_size=(128, 128))
+def predict_image(path):
+    img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
     arr = tf.keras.preprocessing.image.img_to_array(img)
     arr = np.expand_dims(arr, 0)
     pred = model.predict(arr)
@@ -52,7 +47,7 @@ def predict_image(image_path):
 
 
 # -----------------------------------------------------------
-# SAMPLE DISEASE INFO
+# BASIC DISEASE INFO
 # -----------------------------------------------------------
 disease_info = {
     "Apple___Apple_scab": {
@@ -64,8 +59,8 @@ disease_info = {
     "Tomato___Late_blight": {
         "title": "Late Blight (लेट ब्लाईट)",
         "symptoms": "पानांवर तपकिरी पाण्यासारखे डाग.",
-        "treat": "मेटालेक्सिल + मॅन्कोझेब.",
-        "prevent": "आर्द्रता कमी ठेवा."
+        "treat": "मेटालेक्सिल + मॅन्कोझेब फवारणी.",
+        "prevent": "जास्त आर्द्रता टाळा."
     }
 }
 
@@ -78,7 +73,7 @@ st.write("___")
 
 
 # -----------------------------------------------------------
-# FILE UPLOAD
+# FILE UPLOADER
 # -----------------------------------------------------------
 uploaded = st.file_uploader("📸 पानाचा फोटो अपलोड करा", type=["jpg", "jpeg", "png"])
 
@@ -86,8 +81,8 @@ if uploaded:
 
     st.image(uploaded, use_column_width=True)
 
-    temp_image = "temp_uploaded_image.jpg"
-    with open(temp_image, "wb") as f:
+    temp_path = "uploaded_temp.jpg"
+    with open(temp_path, "wb") as f:
         f.write(uploaded.getbuffer())
 
     if st.button("🔍 रोग ओळखा"):
@@ -98,10 +93,10 @@ if uploaded:
 
         if model is None:
             loader.empty()
-            st.error("❌ Model load झाला नाही!")
+            st.error("❌ Model लोड झाला नाही!")
 
         else:
-            idx = predict_image(temp_image)
+            idx = predict_image(temp_path)
 
             class_list = [
                 'Apple___Apple_scab','Apple___Black_rot','Apple___Cedar_apple_rust','Apple___healthy',
@@ -122,16 +117,17 @@ if uploaded:
             predicted = class_list[idx]
 
             loader.empty()
+
             st.success(f"🌱 ओळखलेला रोग: **{predicted}**")
 
-            # Disease Info
+            # Disease Details
             if predicted in disease_info:
-                info = disease_info[predicted]
+                d = disease_info[predicted]
                 st.info(
-                    f"### 📌 {info['title']}\n"
-                    f"**🔍 लक्षणे:** {info['symptoms']}\n\n"
-                    f"**💊 उपचार:** {info['treat']}\n\n"
-                    f"**🛡 प्रतिबंध:** {info['prevent']}"
+                    f"### 📌 {d['title']}\n"
+                    f"**🔍 लक्षणे:** {d['symptoms']}\n\n"
+                    f"**💊 उपचार:** {d['treat']}\n\n"
+                    f"**🛡 प्रतिबंध:** {d['prevent']}"
                 )
 
 else:
