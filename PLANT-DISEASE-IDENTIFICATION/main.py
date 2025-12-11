@@ -4,67 +4,77 @@ import numpy as np
 import os
 from PIL import Image
 
-
-# -------------------- MODEL PREDICTION FUNCTION --------------------
+# -----------------------------------------------------------
+# MODEL PREDICTION FUNCTION
+# -----------------------------------------------------------
 def model_prediction(test_image_path):
 
     current_dir = os.path.dirname(__file__)
 
-    # Try .keras model
+    # Try loading .keras model
     model_path = os.path.join(current_dir, "trained_plant_disease_model.keras")
 
-    # If .keras not found → try .h5
+    # If not found → try .h5
     if not os.path.exists(model_path):
         model_path = os.path.join(current_dir, "trained_plant_disease_model.h5")
 
-    # Still not found → Stop app
+    # Still not found → stop the app
     if not os.path.exists(model_path):
-        st.error("❌ Model file not found!\n\n"
-                 "Please upload **trained_plant_disease_model.keras** or **trained_plant_disease_model.h5**\n"
-                 "in the same folder as main.py.")
+        st.error("""
+        ❌ Model file not found!
+
+        Please upload **trained_plant_disease_model.keras** or **trained_plant_disease_model.h5**
+        in the same folder as main.py.
+        """)
         st.stop()
 
-    # Load model
+    # Load the model
     model = tf.keras.models.load_model(model_path)
 
-    # Preprocess image
+    # Preprocess input image
     image = tf.keras.preprocessing.image.load_img(test_image_path, target_size=(128, 128))
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
-    input_arr = np.array([input_arr])
+    input_arr = np.expand_dims(input_arr, axis=0)
 
-    # Predict
     predictions = model.predict(input_arr)
     return np.argmax(predictions)
 
 
-# -------------------- SIDEBAR --------------------
-st.sidebar.title("AgriSens")
+# -----------------------------------------------------------
+# SIDEBAR
+# -----------------------------------------------------------
+st.sidebar.title("AgriSens — Plant Disease Detector")
 app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
 
 
-# -------------------- LOAD MAIN PAGE IMAGE --------------------
+# -----------------------------------------------------------
+# HOME PAGE IMAGE
+# -----------------------------------------------------------
 current_dir = os.path.dirname(__file__)
 image_path = os.path.join(current_dir, "Diseases.png")
 
 if os.path.exists(image_path):
-    img = Image.open(image_path)
-    st.image(img, use_column_width=True)
+    st.image(image_path, use_column_width=True)
 else:
-    st.warning("⚠️ Diseases.png not found. Add it in the main.py folder.")
+    st.warning("⚠️ Diseases.png not found. Please put it in the project folder.")
 
 
-# -------------------- HOME PAGE --------------------
+# -----------------------------------------------------------
+# HOME PAGE
+# -----------------------------------------------------------
 if app_mode == "HOME":
-    st.markdown("<h1 style='text-align: center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
 
 
-# -------------------- DISEASE RECOGNITION PAGE --------------------
+# -----------------------------------------------------------
+# DISEASE RECOGNITION PAGE
+# -----------------------------------------------------------
 elif app_mode == "DISEASE RECOGNITION":
     st.header("DISEASE RECOGNITION")
 
     test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
 
-    if test_image is not None:
+    if test_image:
 
         if st.button("Show Image"):
             st.image(test_image, use_column_width=True)
@@ -72,15 +82,16 @@ elif app_mode == "DISEASE RECOGNITION":
         if st.button("Predict"):
             st.snow()
 
-            # Save uploaded image temporarily
+            # Save image temporarily
             temp_path = os.path.join(current_dir, "temp.jpg")
+
             with open(temp_path, "wb") as f:
                 f.write(test_image.getbuffer())
 
-            # Predict
+            # Run prediction
             result_index = model_prediction(temp_path)
 
-            # Class labels
+            # Label list
             class_name = [
                 'Apple___Apple_scab', 'Apple___Black_rot',
                 'Apple___Cedar_apple_rust', 'Apple___healthy',
@@ -106,4 +117,4 @@ elif app_mode == "DISEASE RECOGNITION":
                 'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
             ]
 
-            st.success(f"Prediction: **{class_name[result_index]}**")
+            st.success(f"🌱 Predicted Disease: **{class_name[result_index]}**")
