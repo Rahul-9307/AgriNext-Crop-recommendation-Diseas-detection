@@ -1,93 +1,73 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
-import os
 from PIL import Image
-import traceback
+import os
 
-# -----------------------------
-# BASE DIRECTORY
-# -----------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+st.sidebar.title("AgriSens")
+app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
 
-# -----------------------------
-# UNIVERSAL MODEL LOADER
-# -----------------------------
-def load_any_model():
-    keras_path = os.path.join(BASE_DIR, "trained_plant_disease_model.keras")
-    h5_path = os.path.join(BASE_DIR, "trained_plant_disease_model.h5")
-    folder_model = os.path.join(BASE_DIR, "trained_plant_disease_model")
-
-    try:
-        # CASE 1: .keras model
-        if os.path.exists(keras_path):
-            st.info("Loading .keras model...")
-            return tf.keras.models.load_model(keras_path, compile=False)
-
-        # CASE 2: .h5 model
-        if os.path.exists(h5_path):
-            st.info("Loading .h5 model...")
-            return tf.keras.models.load_model(h5_path, compile=False)
-
-        # CASE 3: SavedModel folder
-        if os.path.exists(folder_model) and os.path.isdir(folder_model):
-            st.info("Loading SavedModel folder...")
-            return tf.keras.models.load_model(folder_model, compile=False)
-
-        st.error("❌ Model not found! Place your model in this folder.")
+# --------------------------
+# MODEL LOADING SAFE METHOD
+# --------------------------
+def load_model_safe():
+    if os.path.exists("trained_plant_disease_model.keras"):
+        return tf.keras.models.load_model("trained_plant_disease_model.keras", compile=False)
+    elif os.path.exists("trained_plant_disease_model.h5"):
+        return tf.keras.models.load_model("trained_plant_disease_model.h5", compile=False)
+    else:
+        st.error("❌ Model file missing! Please upload trained_plant_disease_model.keras or .h5")
         st.stop()
 
-    except Exception as e:
-        st.error("❌ Model Load Failed:")
-        st.code(traceback.format_exc())
-        st.stop()
+model = load_model_safe()
 
-# Load model
-model = load_any_model()
-
-# -----------------------------
-# SAFE IMAGE LOADING
-# -----------------------------
-def load_local_image(filename):
-    return Image.open(os.path.join(BASE_DIR, filename))
-
-# -----------------------------
-# MODEL PREDICTION
-# -----------------------------
-def model_prediction(test_image_path):
-    image = tf.keras.preprocessing.image.load_img(test_image_path, target_size=(128,128))
+# --------------------------
+# PREDICTION FUNCTION
+# --------------------------
+def model_prediction(test_image):
+    image = tf.keras.preprocessing.image.load_img(test_image, target_size=(128,128))
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
     input_arr = np.array([input_arr])
     predictions = model.predict(input_arr)
     return np.argmax(predictions)
 
-# -----------------------------
-# STREAMLIT UI
-# -----------------------------
-st.sidebar.title("AgriSens")
-app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
+# --------------------------
+# HEADER IMAGE
+# --------------------------
+try:
+    img = Image.open("Diseases.png")
+    st.image(img)
+except:
+    st.warning("⚠️ Diseases.png not found")
 
+# --------------------------
 # HOME PAGE
+# --------------------------
 if app_mode == "HOME":
-    st.markdown("<h1 style='text-align:center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
 
-# PREDICTION PAGE
+# --------------------------
+# DISEASE RECOGNITION PAGE
+# --------------------------
 elif app_mode == "DISEASE RECOGNITION":
     st.header("DISEASE RECOGNITION")
-
     uploaded_file = st.file_uploader("Choose an Image:")
 
     if uploaded_file:
-        st.image(uploaded_file, width=300)
+        st.image(uploaded_file, use_column_width=True)
 
-        temp_file_path = os.path.join(BASE_DIR, "temp.jpg")
-        with open(temp_file_path, "wb") as f:
+        # Save temporarily
+        temp_path = "temp.jpg"
+        with open(temp_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
 
         if st.button("Predict"):
             st.snow()
+            st.write("Our Prediction")
 
-            # LABELS
+            result_index = model_prediction(temp_path)
+
+            # Labels
             class_name = [
                 'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
                 'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
@@ -105,18 +85,15 @@ elif app_mode == "DISEASE RECOGNITION":
                 'Tomato___healthy'
             ]
 
-            # PREDICT
-            result_index = model_prediction(temp_file_path)
-            predicted = class_name[result_index]
+            disease = class_name[result_index]
+            st.success(f"Model is predicting it's **{disease}** 🌿")
 
-            st.success(f"Model is predicting it's **{predicted}** 🌿")
-
-            # -------------------------------------------------------
-            # AUTO-FERTILIZER RECOMMENDATION CARD
-            # -------------------------------------------------------
+            # -----------------------
+            # ADVISORY CARD (PREMIUM)
+            # -----------------------
             st.markdown("""
             <div style='padding:20px; border-radius:18px; background:#f5faff;
-                        box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family: Poppins;'>
+                        box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family:Poppins;'>
 
                 <h2 style='color:#2b6a4b; text-align:center;'>🌱 Auto-Fertilizer Recommendation</h2>
 
@@ -125,39 +102,45 @@ elif app_mode == "DISEASE RECOGNITION":
                 </div>
 
                 <div style='background:white; padding:15px; border-radius:12px; margin-top:10px;'>
-                    <h4 style='color:#2c3e50;'>🧪 Fungicide Treatment</h4>
+                    <h4>🧪 Fungicide Treatment</h4>
                     <p><b>Mancozeb 75% WP</b><br>
-                    Quantity: <b>2g per liter</b><br>
-                    Frequency: <b>Every 7 days</b><br>
-                    Duration: <b>2–3 cycles</b></p>
+                    • 2g per liter<br>
+                    • Apply every 7 days<br>
+                    • Continue 2–3 cycles</p>
                 </div>
 
                 <div style='background:white; padding:15px; border-radius:12px; margin-top:10px;'>
-                    <h4 style='color:#2c3e50;'>🌿 Nutrient Booster</h4>
+                    <h4>🌿 Nutrient Booster</h4>
                     <p><b>NPK 19:19:19</b><br>
-                    Quantity: <b>5g per liter</b><br>
-                    Timing: <b>After 3 days of fungicide spray</b></p>
+                    • 5g per liter<br>
+                    • Use 3 days after fungicide</p>
                 </div>
 
                 <div style='background:white; padding:15px; border-radius:12px; margin-top:10px;'>
-                    <h4 style='color:#2c3e50;'>🌱 Soil Reviver</h4>
+                    <h4>🌱 Soil Reviver</h4>
                     <p><b>Trichoderma viride</b><br>
-                    5 kg/acre mixed with FYM</p>
+                    • 5 kg/acre<br>
+                    • Mix with FYM</p>
                 </div>
 
                 <div style='background:#e8f8f5; padding:15px; border-radius:12px; margin-top:10px;'>
-                    <h4 style='color:#117864;'>🌤️ Weather Precautions</h4>
+                    <h4>🌤️ Weather Precautions</h4>
                     <ul>
-                        <li>Humidity > 80% = High infection risk</li>
-                        <li>Avoid spraying during rain/wind</li>
-                        <li>Prefer early morning/evening</li>
+                        <li>Avoid spraying in rain/wind</li>
+                        <li>Humidity > 80% = High risk</li>
+                        <li>Spray early morning / evening</li>
                     </ul>
                 </div>
 
                 <div style='margin-top:20px; padding:15px; background:#fff3cd; border-radius:12px;'>
-                    <h4 style='color:#856404;'>🗓 Next Spray Reminder</h4>
-                    Spray again after <b>7 days</b>.
+                    <h4>🗓 Next Spray Reminder</h4>
+                    After <b>7 days</b>.
                 </div>
 
             </div>
             """, unsafe_allow_html=True)
+
+# --------------------------
+# FOOTER
+# --------------------------
+st.markdown("<p style='text-align:center; margin-top:40px; color:gray;'>✨ Supported by AgriNext Team ✨</p>", unsafe_allow_html=True)
