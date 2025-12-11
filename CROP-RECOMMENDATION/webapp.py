@@ -74,15 +74,14 @@ def main():
             st.success(f"{crop}")
 
            # TIPS
-st.subheader("✨ Tips & Tricks (English)")
-st.write(f"""
+            st.subheader("✨ Tips & Tricks")
+            st.write(f"""
 - Maintain soil moisture properly.  
 - Apply recommended fertilizers for **{crop}**.  
 - Monitor pH and rainfall conditions.  
 - Use organic compost for better soil health.  
 - Ensure proper sunlight and irrigation.  
-""")
-
+""") 
 # MARATHI TIPS
 st.subheader("🌾 शेतकऱ्यांसाठी टिप्स (Marathi)")
 st.write(f"""
