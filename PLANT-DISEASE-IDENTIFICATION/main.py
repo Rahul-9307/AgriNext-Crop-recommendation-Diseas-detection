@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 import os
 from PIL import Image
+import traceback
 
 # -----------------------------
 # BASE DIRECTORY
@@ -10,34 +11,45 @@ from PIL import Image
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # -----------------------------
+# UNIVERSAL MODEL LOADER
+# -----------------------------
+def load_any_model():
+    keras_path = os.path.join(BASE_DIR, "trained_plant_disease_model.keras")
+    h5_path = os.path.join(BASE_DIR, "trained_plant_disease_model.h5")
+    folder_model = os.path.join(BASE_DIR, "trained_plant_disease_model")
+
+    try:
+        # CASE 1: .keras model
+        if os.path.exists(keras_path):
+            st.info("Loading .keras model...")
+            return tf.keras.models.load_model(keras_path, compile=False)
+
+        # CASE 2: .h5 model
+        if os.path.exists(h5_path):
+            st.info("Loading .h5 model...")
+            return tf.keras.models.load_model(h5_path, compile=False)
+
+        # CASE 3: SavedModel folder
+        if os.path.exists(folder_model) and os.path.isdir(folder_model):
+            st.info("Loading SavedModel folder...")
+            return tf.keras.models.load_model(folder_model, compile=False)
+
+        st.error("❌ Model not found! Place your model in this folder.")
+        st.stop()
+
+    except Exception as e:
+        st.error("❌ Model Load Failed:")
+        st.code(traceback.format_exc())
+        st.stop()
+
+# Load model
+model = load_any_model()
+
+# -----------------------------
 # SAFE IMAGE LOADING
 # -----------------------------
 def load_local_image(filename):
     return Image.open(os.path.join(BASE_DIR, filename))
-
-# -----------------------------
-# MODEL LOADING (AUTO-HANDLE .keras / .h5)
-# -----------------------------
-def load_model_file():
-    keras_path = os.path.join(BASE_DIR, "trained_plant_disease_model.keras")
-    h5_path = os.path.join(BASE_DIR, "trained_plant_disease_model.h5")
-
-    # Check .keras file
-    if os.path.exists(keras_path):
-        st.success("Loaded model: trained_plant_disease_model.keras")
-        return tf.keras.models.load_model(keras_path, compile=False)
-
-    # Check .h5 file
-    elif os.path.exists(h5_path):
-        st.success("Loaded model: trained_plant_disease_model.h5")
-        return tf.keras.models.load_model(h5_path, compile=False)
-
-    # Model missing
-    else:
-        st.error("❌ Model file not found! Please place model in same folder as main.py")
-        st.stop()
-
-model = load_model_file()
 
 # -----------------------------
 # MODEL PREDICTION
@@ -54,13 +66,6 @@ def model_prediction(test_image_path):
 # -----------------------------
 st.sidebar.title("AgriSens")
 app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
-
-# Load Diseases.png safely
-try:
-    img = load_local_image("Diseases.png")
-    st.image(img)
-except:
-    st.warning("⚠️ Diseases.png file not found in project folder.")
 
 # HOME PAGE
 if app_mode == "HOME":
@@ -107,7 +112,7 @@ elif app_mode == "DISEASE RECOGNITION":
             st.success(f"Model is predicting it's **{predicted}** 🌿")
 
             # -------------------------------------------------------
-            # AUTO-FERTILIZER RECOMMENDATION CARD (PREMIUM DESIGN)
+            # AUTO-FERTILIZER RECOMMENDATION CARD
             # -------------------------------------------------------
             st.markdown("""
             <div style='padding:20px; border-radius:18px; background:#f5faff;
