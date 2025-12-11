@@ -4,6 +4,9 @@ import numpy as np
 import os
 from PIL import Image
 
+# -----------------------------------------------------------
+# PAGE CONFIG
+# -----------------------------------------------------------
 st.set_page_config(page_title="AgriNext – स्मार्ट रोग निदान", layout="centered")
 
 # -----------------------------------------------------------
@@ -15,126 +18,171 @@ st.markdown("""
 h1, h2, h3, h4 {
     text-align:center;
     font-family:'Poppins', sans-serif;
-    color:white;
-}
-
-body {
-    background:#0f1117;
-}
-
-/* Upload Box */
-.upload-box {
-    border: 2px dashed #6A5ACD;
-    padding: 20px;
-    border-radius: 15px;
-    text-align:center;
 }
 
 /* Gradient Button */
 .gradient-btn {
     background: linear-gradient(90deg, #6A5ACD, #00B4D8);
-    color: white !important;
-    padding: 14px;
+    color: white;
+    padding: 14px 26px;
     border-radius: 12px;
+    text-align:center;
+    font-size: 18px;
     width: 100%;
     border:none;
-    font-size:18px;
-    cursor:pointer;
+    margin-top: 10px;
 }
 
-/* Result Card */
+/* Card */
 .result-card {
-    background: #1c1f25;
-    padding: 30px;
-    border-radius: 18px;
-    box-shadow:0 4px 18px rgba(0,0,0,0.5);
-    margin-top:30px;
-    color:white;
+    background: #ffffff;
+    padding:25px;
+    border-radius:18px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.2);
     text-align:center;
+    margin-top:25px;
 }
 
-/* Advisory Box */
-.advice-card {
-    background:#21252b;
+/* Info card */
+.info-card {
+    background:#F8F9FF;
     padding:20px;
-    border-radius:15px;
-    margin-top:15px;
-    box-shadow:0 3px 12px rgba(0,0,0,0.4);
-    font-size:17px;
-    color:#dcdcdc;
+    border-radius:18px;
+    font-size:18px;
+    line-height:1.6;
+    margin-top:20px;
+    border-left:6px solid #6A5ACD;
+}
+
+/* Upload Box */
+.upload-box {
+    border: 2px dashed #6A5ACD;
+    padding: 25px;
+    border-radius: 15px;
+    text-align:center;
 }
 
 /* Footer */
 .footer-card {
     background:#1a1a1a;
-    padding:40px;
-    border-radius:20px;
+    padding:50px;
+    border-radius:18px;
     margin-top:80px;
     color:white;
-    box-shadow:0 4px 15px rgba(0,0,0,0.5);
+    font-family:'Poppins', sans-serif;
+    width:100%;
 }
 
 .footer-title {
     text-align:center;
-    font-size:30px;
+    font-size:32px;
     font-weight:700;
     color:#A259FF;
+    margin-bottom:10px;
+}
+
+.footer-text {
+    font-size:18px;
+    line-height:1.8;
+    text-align:center;
+}
+
+.footer-bullets {
+    font-size:18px;
+    margin-top:15px;
+    text-align:center;
+}
+
+.team-label {
+    font-size:22px;
+    font-weight:600;
+    margin-top:25px;
+    text-align:center;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 
+
 # -----------------------------------------------------------
-# MODEL LOAD
+# MODEL LOADING
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
-    current = os.path.dirname(__file__)
-    keras_path = os.path.join(current, "trained_plant_disease_model.keras")
-    h5_path = os.path.join(current, "trained_plant_disease_model.h5")
+
+    current_dir = os.path.dirname(__file__)
+    keras_path = os.path.join(current_dir, "trained_plant_disease_model.keras")
+    h5_path = os.path.join(current_dir, "trained_plant_disease_model.h5")
 
     if os.path.exists(keras_path):
         return tf.keras.models.load_model(keras_path)
+
     if os.path.exists(h5_path):
         return tf.keras.models.load_model(h5_path)
+
     return None
+
 
 model = load_model()
 
 
 # -----------------------------------------------------------
+# DISEASE INFORMATION DICTIONARY
+# -----------------------------------------------------------
+disease_info = {
+    "Apple___Apple_scab": {
+        "name": "Apple Scab (सफरचंद स्कॅब रोग)",
+        "symptoms": "पानांवर काळपट व गोल ठिपके, फळांवर विकृती.",
+        "treatment": "मँकोझेब/क्लोरोथॅलोनील फवारणी.",
+        "prevention": "बागेत हवेचा प्रवेश वाढवा, संक्रमित पाने जाळा."
+    },
+
+    "Tomato___Late_blight": {
+        "name": "Tomato Late Blight (टोमॅटो लेट ब्लाईट)",
+        "symptoms": "पानांवर तपकिरी पाण्यासारखे डाग, संपूर्ण झाड मरते.",
+        "treatment": "मेटालेक्सिल + मँकोझेब फवारणी.",
+        "prevention": "जास्त आर्द्रता टाळा, रोगग्रस्त झाडे हटवा."
+    },
+
+    "Potato___Early_blight": {
+        "name": "Potato Early Blight (बटाटा अर्ली ब्लाईट)",
+        "symptoms": "पानांवर वर्तुळाकार रिंगयुक्त डाग.",
+        "treatment": "क्लोरोथॅलोनील / मँकोझेब स्प्रे.",
+        "prevention": "योग्य अंतर ठेवून लागवड, रोगग्रस्त पाने काढून टाका."
+    },
+
+    # You can extend more diseases later...
+}
+
+
+
+# -----------------------------------------------------------
 # PREDICT FUNCTION
 # -----------------------------------------------------------
-def predict_image(img_path):
-    img = tf.keras.preprocessing.image.load_img(img_path, target_size=(128,128))
+def predict_image(image_path):
+    img = tf.keras.preprocessing.image.load_img(image_path, target_size=(128,128))
     arr = tf.keras.preprocessing.image.img_to_array(img)
     arr = np.expand_dims(arr, axis=0)
     result = model.predict(arr)
     return np.argmax(result)
 
 
-# BASIC ADVICE DICTIONARY
-advice = {
-    "Corn_(maize)___Northern_Leaf_Blight":
-        "हा रोग *Exserohilum turcicum* या बुरशीमुळे होतो. लक्षणे: लांबट तपकिरी डाग, पाने वाळणे.\nउपाय:\n- संक्रमित पाने काढून टाका.\n- योग्य निचरा असलेली शेती करा.\n- Tricyclazole किंवा Mancozeb फवारणी उपयुक्त.",
-    "Potato___Early_blight":
-        "पानांवर वर्तुळाकार काळे डाग दिसतात. उपाय:\n- रोगट पाने काढून टाका.\n- Chlorothalonil फवारणी करा.",
-    "Apple___Black_rot":
-        "साल काळी पडते, फळे कुजतात. उपाय:\n- रोगट फांद्या छाटणी करा.\n- Copper oxychloride फवारणी उपयुक्त.",
-}
-
 
 # -----------------------------------------------------------
 # HEADER
 # -----------------------------------------------------------
-st.markdown("<h1 style='color:#A259FF;'>🌾 AgriNext – स्मार्ट रोग निदान</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#A259FF; font-weight:700;'>🌾 AgriNext – स्मार्ट वनस्पती रोग निदान</h1>", unsafe_allow_html=True)
+st.write("___")
+
 
 
 # -----------------------------------------------------------
 # FILE UPLOAD
 # -----------------------------------------------------------
-uploaded = st.file_uploader("📸 पानाचा फोटो अपलोड करा", type=["jpg","jpeg","png"])
+st.markdown("<h3>📸 कृपया पानाचा फोटो अपलोड करा</h3>", unsafe_allow_html=True)
+uploaded = st.file_uploader("", type=["jpg", "jpeg", "png"])
+
 
 if uploaded:
 
@@ -146,79 +194,87 @@ if uploaded:
     with open(temp_path, "wb") as f:
         f.write(uploaded.getbuffer())
 
-    if st.button("🔍 रोग ओळखा", key="predict"):
+    if st.button("🔍 रोग ओळखा", help="Predict Disease"):
 
-        # FIXED LOADER POSITION (center + margin)
-        st.markdown("<div style='margin-top:20px; text-align:center;'>"
-                    "<img src='https://i.gifer.com/ZZ5H.gif' width='120'>"
-                    "</div>", unsafe_allow_html=True)
+        # Center loader properly
+        st.markdown(
+            "<center><img src='https://i.gifer.com/ZZ5H.gif' width='120'></center>",
+            unsafe_allow_html=True
+        )
 
         if model is None:
-            st.error("❌ मॉडेल सापडले नाही!")
+            st.error("❌ मॉडेल फाइल मिळाली नाही!")
+
         else:
             idx = predict_image(temp_path)
 
-            class_names = [
-                'Apple___Apple_scab','Apple___Black_rot','Apple___Cedar_apple_rust','Apple___healthy',
-                'Blueberry___healthy','Cherry_(including_sour)___Powdery_mildew','Cherry_(including_sour)___healthy',
-                'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot','Corn_(maize)___Common_rust_',
-                'Corn_(maize)___Northern_Leaf_Blight','Corn_(maize)___healthy','Grape___Black_rot',
-                'Grape___Esca_(Black_Measles)','Grape___Leaf_blight_(Isariopsis_Leaf_Spot)','Grape___healthy',
-                'Orange___Haunglongbing_(Citrus_greening)','Peach___Bacterial_spot','Peach___healthy',
-                'Pepper,_bell___Bacterial_spot','Pepper,_bell___healthy',
-                'Potato___Early_blight','Potato___Late_blight','Potato___healthy',
-                'Raspberry___healthy','Soybean___healthy','Squash___Powdery_mildew',
-                'Strawberry___Leaf_scorch','Strawberry___healthy',
-                'Tomato___Bacterial_spot','Tomato___Early_blight','Tomato___Late_blight',
-                'Tomato___Leaf_Mold','Tomato___Septoria_leaf_spot',
-                'Tomato___Spider_mites Two-spotted_spider_mite','Tomato___Target_Spot',
-                'Tomato___Tomato_Yellow_Leaf_Curl_Virus','Tomato___Tomato_mosaic_virus','Tomato___healthy'
+            class_name = [
+                'Apple___Apple_scab', 'Apple___Black_rot',
+                'Apple___Cedar_apple_rust', 'Apple___healthy',
+                'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
+                'Cherry_(including_sour)___healthy',
+                'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
+                'Corn_(maize)___Common_rust_', 'Corn_(maize)___Northern_Leaf_Blight',
+                'Corn_(maize)___healthy',
+                'Grape___Black_rot', 'Grape___Esca_(Black_Measles)',
+                'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 'Grape___healthy',
+                'Orange___Haunglongbing_(Citrus_greening)',
+                'Peach___Bacterial_spot', 'Peach___healthy',
+                'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy',
+                'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy',
+                'Raspberry___healthy', 'Soybean___healthy', 'Squash___Powdery_mildew',
+                'Strawberry___Leaf_scorch', 'Strawberry___healthy',
+                'Tomato___Bacterial_spot', 'Tomato___Early_blight',
+                'Tomato___Late_blight', 'Tomato___Leaf_Mold',
+                'Tomato___Septoria_leaf_spot',
+                'Tomato___Spider_mites Two-spotted_spider_mite',
+                'Tomato___Target_Spot',
+                'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
+                'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
             ]
 
-            disease = class_names[idx]
+            predicted = class_name[idx]
 
-            # RESULT BOX
-            st.markdown(f"""
-            <div class='result-card'>
-                <h3>🌱 ओळखलेला रोग</h3>
-                <h2 style='color:#4CAF50;'>✔️ {disease}</h2>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<div class='result-card'>", unsafe_allow_html=True)
+            st.markdown("<h3>🌱 ओळखलेला रोग</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#2E8B57;'>✅ {predicted}</h2>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            # ADVISORY SECTION
-            if disease in advice:
+            # Show disease info if available
+            if predicted in disease_info:
+                info = disease_info[predicted]
+
                 st.markdown(f"""
-                <div class='advice-card'>
-                    <h4>📘 रोगाविषयी माहिती:</h4>
-                    {advice[disease]}
+                <div class='info-card'>
+                    <b>📌 रोगाचे नाव:</b> {info['name']} <br><br>
+                    <b>🔍 लक्षणे:</b> {info['symptoms']} <br><br>
+                    <b>💊 उपचार:</b> {info['treatment']} <br><br>
+                    <b>🛡️ प्रतिबंध:</b> {info['prevention']}
                 </div>
                 """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div class='advice-card'>
-                    या रोगाबद्दल अद्याप डेटाबेसमध्ये सविस्तर माहिती नाही.  
-                    पुढील अपडेटमध्ये समाविष्ट केली जाईल.
-                </div>
-                """, unsafe_allow_html=True)
+
+else:
+    st.info("📥 फोटो अपलोड करा.")
 
 
 
 # -----------------------------------------------------------
-# FOOTER (FIXED FULL SIZE)
+# FOOTER
 # -----------------------------------------------------------
 st.markdown("""
 <div class='footer-card'>
     <div class='footer-title'>👥 AgriNext Team</div>
+
     <div class='footer-text'>
-        AgriNext हे शेतकऱ्यांसाठी अत्याधुनिक तंत्रज्ञान वापरून विकसित केलेले बुद्धिमान प्लॅटफॉर्म आहे.
-        आमचे ध्येय — <strong>“प्रत्येक शेतकऱ्याने स्मार्ट शेतीचा लाभ घ्यावा.”</strong>
+        AgriNext — शेतकऱ्यांसाठी विकसित पुढील पिढीचे AI प्लॅटफॉर्म  
+        आमचे ध्येय: <strong>“प्रत्येक शेतकऱ्याला स्मार्ट शेतीची सुविधा देणे.”</strong>
     </div>
 
     <div class='footer-bullets'>
         🔹 AI आधारित रोग निदान <br>
-        🔹 पिक सल्ला <br>
-        🔹 स्थानिक भाषेत मार्गदर्शन <br>
-        🔹 शेत पातळीवरील निर्णय सहाय्य <br>
+        🔹 पिक सल्ला<br>
+        🔹 स्थानिक भाषेत मार्गदर्शन<br>
+        🔹 स्मार्ट निर्णय सहाय्य
     </div>
 
     <div class='team-label'>टीम:</div>
