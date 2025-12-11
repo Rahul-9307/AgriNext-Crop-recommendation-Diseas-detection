@@ -86,7 +86,7 @@ def load_model():
             found_path = os.path.join(root, target_name)
             break
 
-    st.write("🔍 Searching for model...")
+    
 
     if found_path:
        
@@ -160,7 +160,7 @@ elif page == "DISEASE RECOGNITION":
             if model is None:
                 st.error("❌ Model not loaded!")
             else:
-                st.info("⏳ Processing... Please wait")
+                
                 idx, disease, conf = predict_image(temp_path)
 
                 st.success(f"🌱 Predicted Disease: **{disease}**")
@@ -174,6 +174,7 @@ st.markdown("""
 Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
