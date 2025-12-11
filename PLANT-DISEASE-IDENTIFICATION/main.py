@@ -11,7 +11,7 @@ st.set_page_config(page_title="AgriNext – स्मार्ट रोग न�
 
 
 # -----------------------------------------------------------
-# FINAL CLEAN MODEL LOADER (AUTO-DETECT, NO DEBUG)
+# FINAL CLEAN MODEL LOADER (AUTO-DETECT)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
@@ -19,7 +19,7 @@ def load_model():
     model_name = "trained_plant_disease_model.keras"
     found_path = None
 
-    # Search for model in all subfolders (silently)
+    # Search silently
     for root, dirs, files in os.walk(".", topdown=True):
         if model_name in files:
             found_path = os.path.join(root, model_name)
@@ -68,7 +68,9 @@ disease_info = {
 # -----------------------------------------------------------
 # UI HEADER
 # -----------------------------------------------------------
-st.markdown("<h1 style='color:#A259FF;text-align:center;'>🌾 AgriNext – स्मार्ट वनस्पती रोग निदान</h1>", unsafe_allow_html=True)
+st.markdown("""
+<h1 style='color:#A259FF;text-align:center; font-weight:700;'>Agri🌾Next – स्मार्ट वनस्पती रोग निदान</h1>
+""", unsafe_allow_html=True)
 st.write("___")
 
 
@@ -120,15 +122,30 @@ if uploaded:
 
             st.success(f"🌱 ओळखलेला रोग: **{predicted}**")
 
-            # Disease Details
+            # -----------------------------------------------------------
+            # BEAUTIFUL RESULT CARD
+            # -----------------------------------------------------------
             if predicted in disease_info:
                 d = disease_info[predicted]
-                st.info(
-                    f"### 📌 {d['title']}\n"
-                    f"**🔍 लक्षणे:** {d['symptoms']}\n\n"
-                    f"**💊 उपचार:** {d['treat']}\n\n"
-                    f"**🛡 प्रतिबंध:** {d['prevent']}"
-                )
+
+                st.markdown(f"""
+                <div style="
+                    background: linear-gradient(135deg, #6a11cb, #2575fc);
+                    padding: 25px;
+                    border-radius: 15px;
+                    color: white;
+                    margin-top: 20px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                ">
+                    <h2 style="text-align:center; margin-bottom:10px;">🌿 {d['title']}</h2>
+
+                    <p style="font-size:18px; line-height:1.6;">
+                        <b>🔍 लक्षणे:</b> {d['symptoms']} <br><br>
+                        <b>💊 उपचार:</b> {d['treat']} <br><br>
+                        <b>🛡 प्रतिबंध:</b> {d['prevent']}
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
 
 else:
     st.info("📥 कृपया फोटो अपलोड करा.")
@@ -139,8 +156,8 @@ else:
 # -----------------------------------------------------------
 st.markdown("""
 <div style='background:#111;padding:35px;border-radius:12px;color:white;text-align:center;margin-top:50px;'>
-<h2 style='color:#A259FF;'>👥 AgriNext Team</h2>
+<h2 style='color:#A259FF;'>👥 Support by Agri🌾Next Team</h2>
 <p>AI आधारित स्मार्ट शेती प्लॅटफॉर्म</p>
-<p>Developer: Rahul Patil</p>
+<p>Developer: Agri🌾Next</p>
 </div>
 """, unsafe_allow_html=True)
