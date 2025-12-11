@@ -7,7 +7,7 @@ from PIL import Image
 # -----------------------------------------------------------
 # PAGE CONFIG
 # -----------------------------------------------------------
-st.set_page_config(page_title="AgriNext – स्मार्ट रोग निदान", layout="centered")
+st.set_page_config(page_title="Agri🌾Next – स्मार्ट रोग निदान", layout="centered")
 
 
 # -----------------------------------------------------------
@@ -30,7 +30,7 @@ st.markdown("""
 # -----------------------------------------------------------
 # SHOW HERO IMAGE
 # -----------------------------------------------------------
-if os.path.exists("banner.jpg"):
+if os.path.exists("Diseases.png"):
     st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
     st.image("banner.jpg", use_column_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -199,3 +199,4 @@ st.markdown("""
 <p>Developer: Agri🌾Next</p>
 </div>
 """, unsafe_allow_html=True)
+
