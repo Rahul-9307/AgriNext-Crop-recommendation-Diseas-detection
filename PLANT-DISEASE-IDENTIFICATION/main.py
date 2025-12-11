@@ -9,7 +9,6 @@ from PIL import Image
 # -----------------------------------------------------------
 st.set_page_config(page_title="AgriSens", layout="wide")
 
-
 # -----------------------------------------------------------
 # RAW IMAGE LINKS
 # -----------------------------------------------------------
@@ -18,7 +17,6 @@ HERO_IMAGE = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMEN
 IMG_REALTIME = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Real-Time%20Results.png"
 IMG_INSIGHTS = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Actionable%20Insights.png"
 IMG_DETECTION = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Disease%20Detection.png"
-
 
 # -----------------------------------------------------------
 # HERO CSS
@@ -37,16 +35,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-
 # -----------------------------------------------------------
 # HERO IMAGE
 # -----------------------------------------------------------
 st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
 st.image(HERO_IMAGE, use_column_width=True)
 st.markdown("</div>", unsafe_allow_html=True)
-
-
 
 # -----------------------------------------------------------
 # PAGE SELECTOR
@@ -55,55 +49,32 @@ col = st.columns(3)
 with col[1]:
     page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
 
-
-
 # -----------------------------------------------------------
-# CLASS LABELS (IMPORTANT FOR CORRECT PREDICTION)
+# CLASS LABELS — MUST MATCH YOUR TRAINING ORDER
 # -----------------------------------------------------------
 CLASS_NAMES = [
-    "Apple___Apple_scab",
-    "Apple___Black_rot",
-    "Apple___Cedar_apple_rust",
-    "Apple___healthy",
-    "Blueberry___healthy",
-    "Cherry___Powdery_mildew",
-    "Cherry___healthy",
-    "Corn___Cercospora_leaf_spot Gray_leaf_spot",
-    "Corn___Common_rust",
-    "Corn___Northern_Leaf_Blight",
-    "Corn___healthy",
-    "Grape___Black_rot",
-    "Grape___Esca_(Black_Measles)",
-    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
-    "Grape___healthy",
+    "Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy",
+    "Blueberry___healthy", "Cherry___Powdery_mildew", "Cherry___healthy",
+    "Corn___Cercospora_leaf_spot Gray_leaf_spot", "Corn___Common_rust",
+    "Corn___Northern_Leaf_Blight", "Corn___healthy",
+    "Grape___Black_rot", "Grape___Esca_(Black_Measles)",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)", "Grape___healthy",
     "Orange___Haunglongbing_(Citrus_greening)",
-    "Peach___Bacterial_spot",
-    "Peach___healthy",
-    "Pepper_bell___Bacterial_spot",
-    "Pepper_bell___healthy",
-    "Potato___Early_blight",
-    "Potato___Late_blight",
-    "Potato___healthy",
-    "Raspberry___healthy",
-    "Soybean___healthy",
+    "Peach___Bacterial_spot", "Peach___healthy",
+    "Pepper_bell___Bacterial_spot", "Pepper_bell___healthy",
+    "Potato___Early_blight", "Potato___Late_blight", "Potato___healthy",
+    "Raspberry___healthy", "Soybean___healthy",
     "Squash___Powdery_mildew",
-    "Strawberry___Leaf_scorch",
-    "Strawberry___healthy",
-    "Tomato___Bacterial_spot",
-    "Tomato___Early_blight",
-    "Tomato___Late_blight",
-    "Tomato___Leaf_Mold",
-    "Tomato___Septoria_leaf_spot",
-    "Tomato___Spider_mites",
-    "Tomato___Target_Spot",
+    "Strawberry___Leaf_scorch", "Strawberry___healthy",
+    "Tomato___Bacterial_spot", "Tomato___Early_blight", "Tomato___Late_blight",
+    "Tomato___Leaf_Mold", "Tomato___Septoria_leaf_spot",
+    "Tomato___Spider_mites", "Tomato___Target_Spot",
     "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
-    "Tomato___Tomato_mosaic_virus",
-    "Tomato___healthy"
+    "Tomato___Tomato_mosaic_virus", "Tomato___healthy"
 ]
 
-
 # -----------------------------------------------------------
-# AUTO MODEL LOADER
+# AUTO MODEL LOADER (ERROR-FREE)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
@@ -115,20 +86,20 @@ def load_model():
             found_path = os.path.join(root, target_name)
             break
 
-    st.write("🔍 Searching Model...")
+    st.write("🔍 Searching for model...")
 
-    if found_path: st.success(f"✅ Model Found at: {found_path}") return tf.keras.models.load_model(found_path)
+    if found_path:
+        st.success(f"✅ Model Found at: {found_path}")
+        return tf.keras.models.load_model(found_path)
 
-    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras in repo.")
+    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras in your repo.")
     return None
 
 
 model = load_model()
 
-
-
 # -----------------------------------------------------------
-# PREDICTION FUNCTION (FINAL FIXED)
+# PREDICTION FUNCTION (FINAL + FIXED)
 # -----------------------------------------------------------
 def predict_image(path):
     img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
@@ -136,17 +107,14 @@ def predict_image(path):
 
     pred = model.predict(arr)
     idx = np.argmax(pred)
-    confidence = np.max(pred)
+    conf = np.max(pred)
 
-    return idx, CLASS_NAMES[idx], float(confidence)
-
-
+    return idx, CLASS_NAMES[idx], float(conf)
 
 # -----------------------------------------------------------
 # HOME PAGE
 # -----------------------------------------------------------
 if page == "HOME":
-
     st.markdown("""
     <h1 class='center-text' style='color:#2ecc71; font-weight:800;'>AgriSens: Smart Disease Detection</h1>
     <p class='center-text' style='color:#ccc; font-size:18px;'>
@@ -167,8 +135,6 @@ if page == "HOME":
     with col3:
         st.image(IMG_DETECTION, use_column_width=True)
         st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
-
-
 
 # -----------------------------------------------------------
 # DISEASE RECOGNITION PAGE
@@ -194,14 +160,11 @@ elif page == "DISEASE RECOGNITION":
             if model is None:
                 st.error("❌ Model not loaded!")
             else:
-                st.info("⏳ Processing...")
-
+                st.info("⏳ Processing... Please wait")
                 idx, disease, conf = predict_image(temp_path)
 
                 st.success(f"🌱 Predicted Disease: **{disease}**")
                 st.info(f"📊 Confidence: **{conf*100:.2f}%**")
-
-
 
 # -----------------------------------------------------------
 # FOOTER
@@ -211,4 +174,3 @@ st.markdown("""
 Developed by <b>Team AgriSens</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
-
