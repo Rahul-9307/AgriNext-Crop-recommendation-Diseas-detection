@@ -10,12 +10,15 @@ from PIL import Image
 st.set_page_config(page_title="AgriSens", layout="wide")
 
 # -----------------------------------------------------------
-# SIDEBAR NAVIGATION
+# IMAGE PATHS (LOCAL FILES)
 # -----------------------------------------------------------
-page = st.sidebar.selectbox("📌 Select a Page", ["🏠 Home", "🌿 Disease Recognition"])
+HERO_IMAGE = "Diseases.png"
+IMG_REALTIME = "Real-Time Results.png"
+IMG_INSIGHTS = "Actionable Insights.png"
+IMG_DETECTION = "Disease Detection.png"
 
 # -----------------------------------------------------------
-# HERO CSS + FEATURE CSS
+# HERO CSS
 # -----------------------------------------------------------
 st.markdown("""
 <style>
@@ -27,29 +30,34 @@ st.markdown("""
     margin-top: 10px;
     box-shadow: 0px 0px 15px rgba(0,255,150,0.25);
 }
-.center-text { text-align:center; }
-.feature-card img {
-    border-radius: 10px;
+.center-text {
+    text-align: center;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------
-# PAGE 1: HOME
+# HERO IMAGE
 # -----------------------------------------------------------
-if page == "🏠 Home":
+st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
+st.image(HERO_IMAGE, use_column_width=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-    # Hero Banner Image
-    diseases_img = os.path.join(os.path.dirname(__file__), "Diseases.png")
+st.write("")
+st.write("")
 
-    if os.path.exists(diseases_img):
-        st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
-        st.image(diseases_img, use_column_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    else:
-        st.warning("⚠ Diseases.png not found!")
+# -----------------------------------------------------------
+# PAGE SELECTOR (CENTER)
+# -----------------------------------------------------------
+colA = st.columns(3)
+with colA[1]:
+    page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
 
-    # Title + Subtitle
+# -----------------------------------------------------------
+# HOME PAGE
+# -----------------------------------------------------------
+if page == "HOME":
+
     st.markdown("""
     <h1 class='center-text' style='color:#2ecc71; font-weight:800; margin-top:20px;'>
         AgriSens: Smart Disease Detection
@@ -57,73 +65,62 @@ if page == "🏠 Home":
 
     <p class='center-text' style='color:#ccc; font-size:18px;'>
         Empowering farmers with AI-powered plant disease recognition.<br>
-        Upload leaf images to detect diseases and receive actionable insights.
+        Upload leaf images to detect diseases accurately and access actionable insights.
     </p>
     """, unsafe_allow_html=True)
 
     st.write("## Features")
 
-       st.write("## Features")
-
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.image(Real-Time Results.png, use_column_width=True)
+        st.image(IMG_REALTIME, use_column_width=True)
         st.markdown("<p class='center-text'><b>Real-Time Results</b></p>", unsafe_allow_html=True)
-        st.write("Instant predictions with fast AI processing.")
+        st.write("Instant predictions using AI.")
 
     with col2:
         st.image(IMG_INSIGHTS, use_column_width=True)
         st.markdown("<p class='center-text'><b>Actionable Insights</b></p>", unsafe_allow_html=True)
-        st.write("Know disease details and recommended solutions.")
+        st.write("Know disease details and remedies.")
 
     with col3:
         st.image(IMG_DETECTION, use_column_width=True)
         st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
-        st.write("AI-powered identification of plant diseases.")
+        st.write("Identify plant diseases effortlessly.")
 
     st.write("## How It Works")
     st.markdown("""
-    1. Select the **Disease Recognition** page.<br>
-    2. Upload an image of the affected plant leaf.<br>
-    3. Get instant detection and disease information.<br>
+    1. Go to the **Disease Recognition** page.<br>
+    2. Upload a leaf image.<br>
+    3. Get instant AI-based results.<br>
     """, unsafe_allow_html=True)
 
-
 # -----------------------------------------------------------
-# PAGE 2: DISEASE RECOGNITION
+# DISEASE RECOGNITION PAGE
 # -----------------------------------------------------------
-else:
+elif page == "DISEASE RECOGNITION":
 
     st.markdown("""
     <h1 class='center-text' style='color:#2ecc71;'>🌿 Disease Recognition</h1>
     <p class='center-text' style='color:#bbb;'>Upload a plant leaf image to detect disease using AI.</p>
     """, unsafe_allow_html=True)
 
-    # -------------------------
-    # MODEL LOADER
-    # -------------------------
     @st.cache_resource
     def load_model():
-        model_name = "trained_plant_disease_model.keras"
-        for root, dirs, files in os.walk(".", topdown=True):
-            if model_name in files:
-                return tf.keras.models.load_model(os.path.join(root, model_name))
+        if os.path.exists("trained_plant_disease_model.keras"):
+            return tf.keras.models.load_model("trained_plant_disease_model.keras")
         st.error("❌ Model not found!")
         return None
 
     model = load_model()
 
-    # -------------------------
-    # PREDICT FUNCTION
-    # -------------------------
     def predict_image(path):
         img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
         arr = np.expand_dims(tf.keras.preprocessing.image.img_to_array(img), 0)
         pred = model.predict(arr)
         return np.argmax(pred)
 
-    uploaded = st.file_uploader("📸 Upload leaf image", type=["jpg", "jpeg", "png"])
+    uploaded = st.file_uploader("📸 Upload Leaf Image", type=["jpg", "jpeg", "png"])
 
     if uploaded:
         st.image(uploaded, use_column_width=True)
@@ -133,16 +130,9 @@ else:
             f.write(uploaded.getbuffer())
 
         if st.button("🔍 Detect Disease"):
-            loader = st.empty()
-            loader.markdown("<center><img src='https://i.gifer.com/ZZ5H.gif' width='120'></center>", unsafe_allow_html=True)
-
-            if model:
-                idx = predict_image(temp_path)
-                loader.empty()
-                st.success(f"🌱 Predicted Class Index: **{idx}**")
-            else:
-                loader.empty()
-                st.error("❌ Model not loaded!")
+            st.info("⏳ Processing...")
+            idx = predict_image(temp_path)
+            st.success(f"🌱 Predicted Class Index: **{idx}**")
 
 # -----------------------------------------------------------
 # FOOTER
@@ -152,4 +142,3 @@ st.markdown("""
 Developed by <b>Team AgriSens</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
-
