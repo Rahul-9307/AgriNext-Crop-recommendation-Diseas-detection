@@ -130,12 +130,6 @@ if page == "HOME":
         st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
 
 
- st.write("## How It Works")
-    st.markdown("""
-    1. Select **Disease Recognition** page.<br>
-    2. Upload a leaf image.<br>
-    3. Get instant prediction and insights.<br>
-    """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------
 # DISEASE RECOGNITION PAGE
@@ -175,6 +169,7 @@ st.markdown("""
 Developed by <b>Team Agri🌾Next</b> 
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
