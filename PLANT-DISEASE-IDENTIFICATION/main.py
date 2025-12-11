@@ -5,73 +5,93 @@ import os
 from PIL import Image
 
 
-def model_prediction(test_image):
-    model = tf.keras.models.load_model("trained_plant_disease_model.keras")
-    image = tf.keras.preprocessing.image.load_img(test_image, target_size=(128,128))
+# -------------------- MODEL PREDICTION FUNCTION --------------------
+def model_prediction(test_image_path):
+    # Correct model path
+    current_dir = os.path.dirname(__file__)
+    model_path = os.path.join(current_dir, "trained_plant_disease_model.keras")
+
+    # If .keras not found → try .h5
+    if not os.path.exists(model_path):
+        model_path = os.path.join(current_dir, "trained_plant_disease_model.h5")
+
+    # Load model safely
+    model = tf.keras.models.load_model(model_path)
+
+    # Preprocess image
+    image = tf.keras.preprocessing.image.load_img(test_image_path, target_size=(128,128))
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
-    input_arr = np.array([input_arr])  # convert single image to batch
+    input_arr = np.array([input_arr])
+
+    # Prediction
     predictions = model.predict(input_arr)
     return np.argmax(predictions)
 
 
-# ---------- FIX: Correct Image Path ----------
-current_dir = os.path.dirname(__file__)   # folder of main.py
-image_path = os.path.join(current_dir, "Diseases.png")
-
-# load image safely
-img = Image.open(image_path)
-
-
-# Sidebar
-st.sidebar.title("AgriNext")
+# -------------------- SIDEBAR --------------------
+st.sidebar.title("AgriSens")
 app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
 
 
-# Display main image
-st.image(img, use_column_width=True)
+# -------------------- LOAD MAIN PAGE IMAGE --------------------
+current_dir = os.path.dirname(__file__)
+image_path = os.path.join(current_dir, "Diseases.png")
+
+if os.path.exists(image_path):
+    img = Image.open(image_path)
+    st.image(img, use_column_width=True)
+else:
+    st.warning("Diseases.png file not found. Please add it in the project folder.")
 
 
-# HOME Page
+# -------------------- HOME PAGE --------------------
 if app_mode == "HOME":
     st.markdown("<h1 style='text-align: center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
 
 
-# Disease Recognition Page
+# -------------------- DISEASE RECOGNITION PAGE --------------------
 elif app_mode == "DISEASE RECOGNITION":
     st.header("DISEASE RECOGNITION")
 
     test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image is not None:
+
         if st.button("Show Image"):
             st.image(test_image, use_column_width=True)
 
         if st.button("Predict"):
             st.snow()
-            st.write("Our Prediction...")
+            st.write("Model Processing...")
 
-            # Save uploaded file temporarily for model input
-            with open("temp.jpg", "wb") as f:
+            # Save uploaded file temporarily
+            temp_path = os.path.join(current_dir, "temp.jpg")
+            with open(temp_path, "wb") as f:
                 f.write(test_image.getbuffer())
 
-            result_index = model_prediction("temp.jpg")
+            # Run prediction
+            result_index = model_prediction(temp_path)
 
-            # Disease classes
+            # All disease class labels
             class_name = [
                 'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
                 'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
-                'Cherry_(including_sour)___healthy', 'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
-                'Corn_(maize)___Common_rust_', 'Corn_(maize)___Northern_Leaf_Blight', 'Corn_(maize)___healthy',
-                'Grape___Black_rot', 'Grape___Esca_(Black_Measles)', 'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)',
-                'Grape___healthy', 'Orange___Haunglongbing_(Citrus_greening)', 'Peach___Bacterial_spot',
+                'Cherry_(including_sour)___healthy',
+                'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot', 'Corn_(maize)___Common_rust_',
+                'Corn_(maize)___Northern_Leaf_Blight', 'Corn_(maize)___healthy',
+                'Grape___Black_rot', 'Grape___Esca_(Black_Measles)',
+                'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 'Grape___healthy',
+                'Orange___Haunglongbing_(Citrus_greening)', 'Peach___Bacterial_spot',
                 'Peach___healthy', 'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy',
                 'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy',
                 'Raspberry___healthy', 'Soybean___healthy', 'Squash___Powdery_mildew',
                 'Strawberry___Leaf_scorch', 'Strawberry___healthy', 'Tomato___Bacterial_spot',
                 'Tomato___Early_blight', 'Tomato___Late_blight', 'Tomato___Leaf_Mold',
-                'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite',
-                'Tomato___Target_Spot', 'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
-                'Tomato___healthy'
+                'Tomato___Septoria_leaf_spot',
+                'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
+                'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
+                'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
             ]
 
-            st.success(f"Model Prediction: **{class_name[result_index]}**")
+            # Final output
+            st.success(f"Prediction: **{class_name[result_index]}**")
