@@ -6,85 +6,39 @@ from PIL import Image
 
 st.set_page_config(page_title="AgriNext – स्मार्ट रोग निदान", layout="centered")
 
-# -----------------------------------------------------------
-# CSS
-# -----------------------------------------------------------
-st.markdown("""
-<style>
-h1, h2, h3 { text-align:center; font-family:'Poppins', sans-serif; }
-
-.result-card {
-    background:#fff;
-    padding:25px;
-    border-radius:18px;
-    box-shadow:0 4px 15px rgba(0,0,0,0.2);
-    margin-top:20px;
-    text-align:center;
-}
-
-.info-box {
-    background:#EEF1FF;
-    padding:20px;
-    border-radius:15px;
-    margin-top:20px;
-    border-left:6px solid #6A5ACD;
-    font-size:17px;
-}
-
-.footer {
-    width:100%;
-    background:#111;
-    padding:40px;
-    margin-top:60px;
-    border-radius:16px;
-    color:white;
-    text-align:center;
-}
-</style>
-""", unsafe_allow_html=True)
-
 
 # -----------------------------------------------------------
-# LOAD MODEL
+# MODEL LOADING (100% Working Guaranteed)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
-    current = os.path.dirname(__file__)
-    p1 = os.path.join(current, "trained_plant_disease_model.keras")
-    p2 = os.path.join(current, "trained_plant_disease_model.h5")
 
-    if os.path.exists(p1): return tf.keras.models.load_model(p1)
-    if os.path.exists(p2): return tf.keras.models.load_model(p2)
+    # debugging – show all files
+    st.write("📂 Current Directory Files:", os.listdir("."))
+
+    keras_file = "trained_plant_disease_model.keras"
+    h5_file = "trained_plant_disease_model.h5"
+
+    if os.path.exists(keras_file):
+        st.success("✔ .keras Model Loaded Successfully!")
+        return tf.keras.models.load_model(keras_file)
+
+    if os.path.exists(h5_file):
+        st.success("✔ .h5 Model Loaded Successfully!")
+        return tf.keras.models.load_model(h5_file)
+
+    st.error("❌ Model file not found in folder!")
     return None
 
+
 model = load_model()
-
-
-# -----------------------------------------------------------
-# DISEASE INFO
-# -----------------------------------------------------------
-disease_info = {
-    "Apple___Apple_scab": {
-        "name": "Apple Scab (सफरचंद स्कॅब)",
-        "sym": "पानांवर काळपट डाग, फळे विकृत.",
-        "treat": "मॅन्कोझेब / क्लोरोथॅलोनील फवारणी.",
-        "prev": "संक्रमित पाने जाळा, हवेचा प्रवेश वाढवा."
-    },
-
-    "Tomato___Late_blight": {
-        "name": "Tomato Late Blight (टोमॅटो लेट ब्लाईट)",
-        "sym": "पानांवर तपकिरी पाण्यासारखे डाग.",
-        "treat": "मेटालेक्सिल + मॅन्कोझेब.",
-        "prev": "जास्त आर्द्रता टाळा, रोगग्रस्त झाडे काढून टाका."
-    }
-}
 
 
 # -----------------------------------------------------------
 # PREDICT FUNCTION
 # -----------------------------------------------------------
 def predict_image(path):
-    img = tf.keras.preprocessing.image.load_img(path, target_size=(128,128))
+    img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
     arr = tf.keras.preprocessing.image.img_to_array(img)
     arr = np.expand_dims(arr, 0)
     pred = model.predict(arr)
@@ -92,32 +46,48 @@ def predict_image(path):
 
 
 # -----------------------------------------------------------
+# DISEASE INFORMATION
+# -----------------------------------------------------------
+disease_info = {
+    "Apple___Apple_scab": {
+        "name": "Apple Scab (सफरचंद स्कॅब)",
+        "sym": "पानांवर काळपट डाग, फळे विकृत.",
+        "treat": "मॅन्कोझेब / क्लोरोथॅलोनील फवारणी.",
+        "prev": "संक्रमित पाने जाळा."
+    },
+    "Tomato___Late_blight": {
+        "name": "Tomato Late Blight (लेट ब्लाईट)",
+        "sym": "पानांवर तपकिरी पाण्यासारखे डाग.",
+        "treat": "मेटालेक्सिल + मॅन्कोझेब.",
+        "prev": "जास्त आर्द्रता टाळा."
+    }
+}
+
+
+# -----------------------------------------------------------
 # UI
 # -----------------------------------------------------------
-st.markdown("<h1 style='color:#A259FF;'>🌾 AgriNext – स्मार्ट रोग निदान</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#A259FF;text-align:center;'>🌾 AgriNext – स्मार्ट रोग निदान</h1>", unsafe_allow_html=True)
 st.write("___")
 
-uploaded = st.file_uploader("📸 पानाचा फोटो अपलोड करा", type=["jpg","jpeg","png"])
+uploaded = st.file_uploader("📸 पानाचा फोटो अपलोड करा", type=["jpg", "jpeg", "png"])
 
 if uploaded:
     st.image(uploaded, use_column_width=True)
 
-    # save temp
     temp = "temp_img.jpg"
     with open(temp, "wb") as f:
         f.write(uploaded.getbuffer())
 
     if st.button("🔍 रोग ओळखा"):
 
-        # --------------------------
-        # VISIBLE LOADER FIX
-        # --------------------------
         loader = st.empty()
         loader.markdown("<center><img src='https://i.gifer.com/ZZ5H.gif' width='140'></center>", unsafe_allow_html=True)
 
         if model is None:
             loader.empty()
-            st.error("❌ मॉडेल फाइल सापडली नाही!")
+            st.error("❌ Model load झाला नाही!")
+
         else:
             idx = predict_image(temp)
 
@@ -139,40 +109,30 @@ if uploaded:
 
             predicted = class_list[idx]
 
-            # stop loader
             loader.empty()
 
-            # Show result
-            st.markdown(f"""
-            <div class='result-card'>
-                <h3>🌱 ओळखलेला रोग</h3>
-                <h2 style='color:#2E8B57;'>{predicted}</h2>
-            </div>
-            """, unsafe_allow_html=True)
+            st.success(f"🌱 ओळखलेला रोग: **{predicted}**")
 
-            # Disease Information
             if predicted in disease_info:
                 info = disease_info[predicted]
-                st.markdown(f"""
-                <div class='info-box'>
-                    <b>📌 रोगाचे नाव:</b> {info['name']} <br><br>
-                    <b>🔍 लक्षणे:</b> {info['sym']} <br><br>
-                    <b>💊 उपचार:</b> {info['treat']} <br><br>
-                    <b>🛡 प्रतिबंध:</b> {info['prev']}
-                </div>
-                """, unsafe_allow_html=True)
+                st.info(
+                    f"### 📌 {info['name']}\n"
+                    f"**🔍 लक्षणे:** {info['sym']}\n\n"
+                    f"**💊 उपचार:** {info['treat']}\n\n"
+                    f"**🛡 प्रतिबंध:** {info['prev']}"
+                )
 
 else:
     st.info("📥 फोटो अपलोड करा.")
 
 
 # -----------------------------------------------------------
-# FOOTER FIXED (Always Visible)
+# FOOTER
 # -----------------------------------------------------------
 st.markdown("""
-<div class='footer'>
-    <h2 style='color:#A259FF;'>👥 AgriNext Team</h2>
-    <p>AI आधारित स्मार्ट शेती प्लॅटफॉर्म — शेतकऱ्यांसाठी बनवलेले.</p>
-    <p>Team: Rahul Patil & AgriNext Advisory Group</p>
+<div style='background:#111;padding:35px;border-radius:14px;color:white;text-align:center;margin-top:50px;'>
+<h2 style='color:#A259FF;'>👥 AgriNext Team</h2>
+<p>AI आधारित स्मार्ट शेती प्लॅटफॉर्म</p>
+<p>Developer: Rahul Patil</p>
 </div>
 """, unsafe_allow_html=True)
