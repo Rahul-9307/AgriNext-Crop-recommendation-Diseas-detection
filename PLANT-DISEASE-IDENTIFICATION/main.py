@@ -5,21 +5,47 @@ import os
 from PIL import Image
 
 # -----------------------------
-# SAFE IMAGE LOADING
+# BASE DIRECTORY
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# -----------------------------
+# SAFE IMAGE LOADING
+# -----------------------------
 def load_local_image(filename):
     return Image.open(os.path.join(BASE_DIR, filename))
 
 # -----------------------------
-# MODEL PREDICTION FUNCTION
+# MODEL LOADING (AUTO-HANDLE .keras / .h5)
+# -----------------------------
+def load_model_file():
+    keras_path = os.path.join(BASE_DIR, "trained_plant_disease_model.keras")
+    h5_path = os.path.join(BASE_DIR, "trained_plant_disease_model.h5")
+
+    # Check .keras file
+    if os.path.exists(keras_path):
+        st.success("Loaded model: trained_plant_disease_model.keras")
+        return tf.keras.models.load_model(keras_path, compile=False)
+
+    # Check .h5 file
+    elif os.path.exists(h5_path):
+        st.success("Loaded model: trained_plant_disease_model.h5")
+        return tf.keras.models.load_model(h5_path, compile=False)
+
+    # Model missing
+    else:
+        st.error("❌ Model file not found! Please place model in same folder as main.py")
+        st.stop()
+
+model = load_model_file()
+
+# -----------------------------
+# MODEL PREDICTION
 # -----------------------------
 def model_prediction(test_image_path):
-    model = tf.keras.models.load_model(os.path.join(BASE_DIR, "trained_plant_disease_model.keras"))
     image = tf.keras.preprocessing.image.load_img(test_image_path, target_size=(128,128))
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
-    input_arr = np.array([input_arr])  # convert single image to batch
+    input_arr = np.array([input_arr])
     predictions = model.predict(input_arr)
     return np.argmax(predictions)
 
@@ -34,13 +60,13 @@ try:
     img = load_local_image("Diseases.png")
     st.image(img)
 except:
-    st.warning("⚠️ ‘Diseases.png’ file not found! Please check your project folder.")
+    st.warning("⚠️ Diseases.png file not found in project folder.")
 
-# Main Page
+# HOME PAGE
 if app_mode == "HOME":
-    st.markdown("<h1 style='text-align: center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center;'>SMART DISEASE DETECTION</h1>", unsafe_allow_html=True)
 
-# Prediction Page
+# PREDICTION PAGE
 elif app_mode == "DISEASE RECOGNITION":
     st.header("DISEASE RECOGNITION")
 
@@ -49,19 +75,14 @@ elif app_mode == "DISEASE RECOGNITION":
     if uploaded_file:
         st.image(uploaded_file, width=300)
 
-        # Save uploaded file temporarily
         temp_file_path = os.path.join(BASE_DIR, "temp.jpg")
         with open(temp_file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
 
         if st.button("Predict"):
             st.snow()
-            st.write("Our Prediction")
 
-            # Predict
-            result_index = model_prediction(temp_file_path)
-
-            # Labels
+            # LABELS
             class_name = [
                 'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
                 'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
@@ -79,12 +100,15 @@ elif app_mode == "DISEASE RECOGNITION":
                 'Tomato___healthy'
             ]
 
-            predicted_label = class_name[result_index]
-            st.success(f"Model is predicting it's **{predicted_label}** 🌿")
+            # PREDICT
+            result_index = model_prediction(temp_file_path)
+            predicted = class_name[result_index]
 
-            # --------------------------------------
-            # AUTO-FERTILIZER RECOMMENDATION CARD
-            # --------------------------------------
+            st.success(f"Model is predicting it's **{predicted}** 🌿")
+
+            # -------------------------------------------------------
+            # AUTO-FERTILIZER RECOMMENDATION CARD (PREMIUM DESIGN)
+            # -------------------------------------------------------
             st.markdown("""
             <div style='padding:20px; border-radius:18px; background:#f5faff;
                         box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family: Poppins;'>
