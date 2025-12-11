@@ -46,12 +46,12 @@ def predict_crop(n, p, k, temp, hum, ph, rain):
 # ---------------------------------------
 def main():
 
-    # SIMPLE HEADER (NO CSS)
+    # SIMPLE HEADER
     st.title("AgriNext - Smart Crop Recommendation")
 
     # SIDEBAR
     st.sidebar.title("Agri🌾Next")
-    st.sidebar.title("Enter Crop Details")
+    st.sidebar.header("Enter Crop Details")
 
     nitrogen = st.sidebar.number_input("Nitrogen (N)", 0.0, 140.0, 0.0)
     phosphorus = st.sidebar.number_input("Phosphorus (P)", 0.0, 145.0, 0.0)
@@ -70,38 +70,45 @@ def main():
         else:
             crop = predict_crop(*values)
 
+            # RESULT
             st.subheader("🌾 Recommended Crop")
             st.success(f"{crop}")
 
-           # TIPS
-            st.subheader("✨ Tips & Tricks")
+            # -------------------------
+            # ENGLISH TIPS
+            # -------------------------
+            st.subheader("✨ Tips & Tricks (English)")
             st.write(f"""
 - Maintain soil moisture properly.  
 - Apply recommended fertilizers for **{crop}**.  
 - Monitor pH and rainfall conditions.  
 - Use organic compost for better soil health.  
 - Ensure proper sunlight and irrigation.  
-""") 
- # TIPS
-            st.subheader("✨ Tips & Tricks")
+""")
+
+            # -------------------------
+            # MARATHI TIPS
+            # -------------------------
+            st.subheader("🌾 शेतकऱ्यांसाठी टिप्स (Marathi)")
             st.write(f"""
- मातीतील आर्द्रता योग्य प्रमाणात ठेवावी.  
+- मातीतील आर्द्रता योग्य प्रमाणात ठेवावी.  
 - **{crop}** पिकासाठी शिफारस केलेले खत वेळेवर वापरावे.  
 - मातीचे pH आणि पावसाचे प्रमाण तपासत राहावे.  
 - सेंद्रिय खते (कंपोस्ट) वापरल्यास उत्पादन वाढते.  
-- योग्य सूर्यप्रकाश आणि पाणी व्यवस्थापन करणे महत्वाचे आहे. 
-""") 
-# SUPPORT MESSAGE
-st.subheader("🤝 Support")
-st.write("""
+- योग्य सूर्यप्रकाश आणि पाणी व्यवस्थापन करणे महत्वाचे आहे.  
+""")
+
+            # -------------------------
+            # SUPPORT (BOTTOM)
+            # -------------------------
+            st.subheader("🤝 Support")
+            st.write("""
 **Support by AgriNext Team**  
 For any help or guidance, feel free to reach out to us.  
 """)
 
+       
 
 # RUN APP
 if __name__ == "__main__":
     main()
-
-
-
