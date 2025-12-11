@@ -136,12 +136,10 @@ def main():
 For any help or guidance, feel free to reach out to us.  
 """)
 
-            st.write("""
-**सहाय्यता : AgriNext टीमकडून**  
-कुठलीही अडचण असल्यास आमच्याशी संपर्क साधा.  
-""")
+    
 
 
 # RUN APP
 if __name__ == "__main__":
     main()
+
