@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 # -----------------------------------------------------------
-# PAGE CONFIG (centered & compact)
+# PAGE CONFIG
 # -----------------------------------------------------------
 st.set_page_config(page_title="Agri🌾Next", layout="centered")
 
@@ -19,45 +19,92 @@ IMG_INSIGHTS = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMM
 IMG_DETECTION = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Disease%20Detection.png"
 
 # -----------------------------------------------------------
-# COMPACT / CENTERED CSS
+# ULTRA PREMIUM CSS (Glassmorphism + Premium Green Theme)
 # -----------------------------------------------------------
 st.markdown("""
 <style>
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Main container width */
 .block-container {
     max-width: 900px;
     padding-top: 10px;
 }
 
-/* HERO IMAGE CONTAINER */
+/* HERO IMAGE */
 .hero-wrapper {
     display: flex;
     justify-content: center;
 }
 .hero-img {
-    margin-top: 51px;
+    margin-top: 45px;
     width: 100%;
-    border-radius: 16px;
-    border: 2px solid #2ecc71;
-    box-shadow: 0px 0px 10px rgba(0,255,140,0.20);
+    border-radius: 18px;
+    border: 2px solid #19c37d;
+    box-shadow: 0 0 18px rgba(25,195,125,0.3);
 }
 
-.center-text { text-align: center; }
+/* Premium green heading */
+h1, h2, h3 {
+    color: #19c37d !important;
+    font-weight: 700;
+}
 
+/* Glass Card */
+.card {
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid rgba(25,195,125,0.4);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    transition: 0.25s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 25px rgba(25,195,125,0.45);
+}
+
+/* Small centered text */
+.center-text { text-align: center; color: #ccc; }
+
+/* Buttons */
+.stButton>button {
+    background: #19c37d;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 22px;
+    border: none;
+    font-size: 16px;
+    transition: 0.25s;
+    font-weight: 600;
+}
+.stButton>button:hover {
+    background: #17a86c;
+    transform: scale(1.05);
+}
+
+/* Footer */
 .app-footer {
-    background:#111;
-    padding:10px;
-    border-radius:8px;
-    margin-top:20px;
+    background:#0e0e0e;
+    padding:12px;
+    border-radius:10px;
+    margin-top:25px;
     text-align:center;
     font-size:13px;
     color:white;
+    border:1px solid rgba(255,255,255,0.1);
 }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------
-# HERO IMAGE (centered & smaller)
+# HERO IMAGE
 # -----------------------------------------------------------
 st.markdown(f"""
 <div class='hero-wrapper'>
@@ -66,14 +113,14 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------
-# PAGE SELECTOR (centered)
+# PAGE SELECTOR
 # -----------------------------------------------------------
-cols = st.columns([1, 2, 1])
+cols = st.columns([1,2,1])
 with cols[1]:
     page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
 
 # -----------------------------------------------------------
-# CLASS LABELS — MUST MATCH YOUR TRAINING ORDER
+# CLASS LABELS
 # -----------------------------------------------------------
 CLASS_NAMES = [
     "Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy",
@@ -97,7 +144,7 @@ CLASS_NAMES = [
 ]
 
 # -----------------------------------------------------------
-# AUTO MODEL LOADER (ERROR-FREE)
+# AUTO MODEL LOADER
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
@@ -109,24 +156,25 @@ def load_model():
             found_path = os.path.join(root, target_name)
             break
 
-    # small inline status text (center)
-    st.markdown("<p class='center-text' style='color:#9dbfa8; font-size:13px;'>🔍 Searching for model... (compact)</p>", unsafe_allow_html=True)
+    st.markdown(
+        "<p class='center-text' style='font-size:14px;'>🔍 Loading AI Model...</p>",
+        unsafe_allow_html=True)
 
     if found_path:
-        st.success(f"✅ Model Found at: {found_path}")
+        st.success(f"✅ Model Found: {found_path}")
         return tf.keras.models.load_model(found_path)
 
-    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras in your repo.")
+    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras.")
     return None
 
 model = load_model()
 
 # -----------------------------------------------------------
-# PREDICTION FUNCTION
+# PREDICT FUNCTION
 # -----------------------------------------------------------
 def predict_image(path):
-    img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
-    arr = np.expand_dims(tf.keras.preprocessing.image.img_to_array(img) / 255.0, 0)
+    img = tf.keras.preprocessing.image.load_img(path, target_size=(128,128))
+    arr = np.expand_dims(tf.keras.preprocessing.image.img_to_array(img)/255.0, 0)
     pred = model.predict(arr)
     idx = np.argmax(pred)
     conf = np.max(pred)
@@ -136,63 +184,58 @@ def predict_image(path):
 # HOME PAGE
 # -----------------------------------------------------------
 if page == "HOME":
-    st.markdown("<h1 class='center-text' style='color:#2ecc71; font-weight:800;'>Agri🌾Next: Smart Disease Detection</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='center-text' style='color:#9aa; font-size:15px;'>AI-powered platform for accurate plant disease recognition.</p>", unsafe_allow_html=True)
+
+    st.markdown("<h1 style='text-align:center;'>Agri🌾Next — Smart Disease Detection</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='center-text' style='font-size:16px;'>AI-powered plant health monitoring platform</p>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
-    # smaller thumbnails to keep the UI compact and centered
     with c1:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.image(IMG_REALTIME, width=220)
-        st.markdown("<p class='center-text'><b>Real-Time Results</b></p>", unsafe_allow_html=True)
+        st.markdown("<p class='center-text'><b>Real-Time Results</b></p></div>", unsafe_allow_html=True)
 
     with c2:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.image(IMG_INSIGHTS, width=220)
-        st.markdown("<p class='center-text'><b>Actionable Insights</b></p>", unsafe_allow_html=True)
+        st.markdown("<p class='center-text'><b>Actionable Insights</b></p></div>", unsafe_allow_html=True)
 
     with c3:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.image(IMG_DETECTION, width=220)
-        st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
+        st.markdown("<p class='center-text'><b>Disease Detection</b></p></div>", unsafe_allow_html=True)
 
-
-    # HOW IT WORKS SECTION (AT BOTTOM OF HOME PAGE)
     st.markdown("""
     <h2 style='text-align:center; margin-top:35px;'>How It Works 🔍</h2>
-    <div style='max-width:700px; margin:auto; font-size:17px; line-height:1.6;'>
+    <div style='max-width:700px; margin:auto; font-size:17px; line-height:1.6; color:#ccc;'>
         <ol>
-            <li>Navigate to the <b>"Disease Recognition"</b> page.</li>
-            <li>Upload an image of the affected plant.</li>
-            <li>Get instant results along with disease information.</li>
+            <li>Go to the <b>Disease Recognition</b> page</li>
+            <li>Upload your plant leaf image</li>
+            <li>Get instant disease prediction with accuracy</li>
         </ol>
     </div>
     """, unsafe_allow_html=True)
 
-
 # -----------------------------------------------------------
-# DISEASE RECOGNITION PAGE (compact)
+# DISEASE RECOGNITION PAGE
 # -----------------------------------------------------------
 elif page == "DISEASE RECOGNITION":
-    st.markdown("<h2 class='center-text' style='color:#2ecc71;'>🌿 Disease Recognition</h2>", unsafe_allow_html=True)
-    st.markdown("<p class='center-text' style='color:#9aa;'>Upload a plant leaf image to detect disease.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 class='center-text'>🌿 Disease Recognition</h2>", unsafe_allow_html=True)
+    st.markdown("<p class='center-text'>Upload a plant leaf image to detect disease</p>", unsafe_allow_html=True)
 
-    # Centered uploader
-    col_up1, col_up2, col_up3 = st.columns([1, 2, 1])
+    col_up1, col_up2, col_up3 = st.columns([1,2,1])
     with col_up2:
-        uploaded = st.file_uploader("", type=["jpg", "jpeg", "png"])
+        uploaded = st.file_uploader("", type=["jpg","jpeg","png"])
 
     if uploaded:
-
-        # 🔥 PERFECT CENTER IMAGE
-        img_left, img_center, img_right = st.columns([1, 2, 1])
+        img_left, img_center, img_right = st.columns([1,2,1])
         with img_center:
             st.image(uploaded, width=420)
 
-        # Save temp file
         temp_path = "uploaded_temp.jpg"
         with open(temp_path, "wb") as f:
             f.write(uploaded.getbuffer())
 
-        # 🔥 PERFECT CENTER BUTTON
-        btn_left, btn_center, btn_right = st.columns([1, 1, 1])
+        btn_left, btn_center, btn_right = st.columns([1,1,1])
         with btn_center:
             detect = st.button("🔍 Detect Disease")
 
@@ -203,26 +246,14 @@ elif page == "DISEASE RECOGNITION":
                 st.info("🔮 Predict by AgriNext Team")
                 idx, disease, conf = predict_image(temp_path)
 
-                # 🔥 Center result card
                 st.markdown(f"""
-                <div style='border:1px solid #2ecc71; padding:12px; border-radius:10px;
-                max-width:450px; margin:auto; text-align:center;'>
-                    <h3 style='color:#2ecc71;'>🌱 Predicted: <b>{disease}</b></h3>
+                <div class='card' style='max-width:450px; margin:auto; text-align:center;'>
+                    <h3>🌱 Predicted: <b>{disease}</b></h3>
                     <p style='color:#ccc;'>Confidence: <b>{conf*100:.2f}%</b></p>
                 </div>
                 """, unsafe_allow_html=True)
 
-
 # -----------------------------------------------------------
-# FOOTER (compact)
+# FOOTER
 # -----------------------------------------------------------
 st.markdown("<div class='app-footer'>Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit</div>", unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
