@@ -160,7 +160,7 @@ elif page == "DISEASE RECOGNITION":
             if model is None:
                 st.error("❌ Model not loaded!")
             else:
-                st.info("⏳ Processing... Please wait")
+                st.info("🔮 Predict by AgriNext Team")
                 idx, disease, conf = predict_image(temp_path)
 
                 st.success(f"🌱 Predicted Disease: **{disease}**")
@@ -174,5 +174,6 @@ st.markdown("""
 Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
+
 
 
