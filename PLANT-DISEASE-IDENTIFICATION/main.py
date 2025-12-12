@@ -1,4 +1,4 @@
-import streamlit as st
+mera project pr sabhi center kare aur small kare import streamlit as st
 import os
 import tensorflow as tf
 import numpy as np
@@ -7,7 +7,7 @@ from PIL import Image
 # -----------------------------------------------------------
 # PAGE CONFIG
 # -----------------------------------------------------------
-st.set_page_config(page_title="Agri🌾Sens", layout="wide")
+st.set_page_config(page_title="Agri🌾Next", layout="wide")
 
 # -----------------------------------------------------------
 # RAW IMAGE LINKS
@@ -18,70 +18,39 @@ IMG_REALTIME = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMM
 IMG_INSIGHTS = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Actionable%20Insights.png"
 IMG_DETECTION = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Disease%20Detection.png"
 
-
 # -----------------------------------------------------------
-# GLOBAL UI CSS — Same as Streamlit Cloud Clean UI
+# HERO CSS
 # -----------------------------------------------------------
 st.markdown("""
 <style>
-
-body {
-    font-family: "Poppins", sans-serif;
-}
-
-.hero-box img {
-    width: 70% !important;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
-    border-radius: 15px;
+.hero-box {
+    width: 100%;
+    border-radius: 18px;
+    overflow: hidden;
     border: 2px solid #2ecc71;
+    margin-top: 10px;
+    box-shadow: 0px 0px 15px rgba(0,255,150,0.25);
 }
-
-.center-text {
-    text-align: center;
-}
-
-select, .stSelectbox {
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-.small-card img {
-    width: 90% !important;
-    border-radius: 10px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.stSelectbox > div {
-    margin: auto;
-    width: 40%;
-}
-
+.center-text { text-align:center; }
 </style>
 """, unsafe_allow_html=True)
 
-
 # -----------------------------------------------------------
-# HERO IMAGE (center)
+# HERO IMAGE
 # -----------------------------------------------------------
 st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
-st.image(HERO_IMAGE)
+st.image(HERO_IMAGE, use_column_width=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
+# -----------------------------------------------------------
+# PAGE SELECTOR
+# -----------------------------------------------------------
+col = st.columns(3)
+with col[1]:
+    page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
 
 # -----------------------------------------------------------
-# PAGE SELECTOR (center)
-# -----------------------------------------------------------
-st.markdown("<div style='width:40%; margin:auto;'>", unsafe_allow_html=True)
-page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
-st.markdown("</div>", unsafe_allow_html=True)
-
-
-# -----------------------------------------------------------
-# CLASS LABELS — MUST MATCH TRAINING
+# CLASS LABELS — MUST MATCH YOUR TRAINING ORDER
 # -----------------------------------------------------------
 CLASS_NAMES = [
     "Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy",
@@ -106,68 +75,66 @@ CLASS_NAMES = [
 
 
 # -----------------------------------------------------------
-# MODEL LOADER — SAFE LOAD
+# AUTO MODEL LOADER (ERROR-FREE)
 # -----------------------------------------------------------
 @st.cache_resource
 def load_model():
     target_name = "trained_plant_disease_model.keras"
+    found_path = None
+
     for root, dirs, files in os.walk(".", topdown=True):
         if target_name in files:
-            path = os.path.join(root, target_name)
-            st.success(f"✅ Model Loaded: {path}")
-            return tf.keras.models.load_model(path)
+            found_path = os.path.join(root, target_name)
+            break
 
-    st.error("❌ Model NOT FOUND — Upload trained_plant_disease_model.keras")
+    st.write("🔍 Searching for model...")
+
+    if found_path:
+        st.success(f"✅ Model Found at: {found_path}")
+        return tf.keras.models.load_model(found_path)
+
+    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras in your repo.")
     return None
 
 
 model = load_model()
-
-
 # -----------------------------------------------------------
-# PREDICT FUNCTION
+# PREDICTION FUNCTION (FINAL + FIXED)
 # -----------------------------------------------------------
 def predict_image(path):
     img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
     arr = np.expand_dims(tf.keras.preprocessing.image.img_to_array(img) / 255.0, 0)
+
     pred = model.predict(arr)
     idx = np.argmax(pred)
     conf = np.max(pred)
-    return idx, CLASS_NAMES[idx], float(conf)
 
+    return idx, CLASS_NAMES[idx], float(conf)
 
 # -----------------------------------------------------------
 # HOME PAGE
 # -----------------------------------------------------------
 if page == "HOME":
-
     st.markdown("""
-    <h1 class='center-text' style='color:#2ecc71;'>AgriSens: Smart Disease Detection</h1>
-    <p class='center-text' style='color:#ccc; font-size:17px;'>
-        Empowering Farmers with AI-Powered Plant Disease Recognition.
+    <h1 class='center-text' style='color:#2ecc71; font-weight:800;'>Agri🌾Next: Smart Disease Detection</h1>
+    <p class='center-text' style='color:#ccc; font-size:18px;'>
+        AI-powered platform for accurate plant disease recognition.
     </p>
     """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown("<div class='small-card'>", unsafe_allow_html=True)
-        st.image(IMG_REALTIME)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.image(IMG_REALTIME, use_column_width=True)
         st.markdown("<p class='center-text'><b>Real-Time Results</b></p>", unsafe_allow_html=True)
 
     with col2:
-        st.markdown("<div class='small-card'>", unsafe_allow_html=True)
-        st.image(IMG_INSIGHTS)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.image(IMG_INSIGHTS, use_column_width=True)
         st.markdown("<p class='center-text'><b>Actionable Insights</b></p>", unsafe_allow_html=True)
 
     with col3:
-        st.markdown("<div class='small-card'>", unsafe_allow_html=True)
-        st.image(IMG_DETECTION)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.image(IMG_DETECTION, use_column_width=True)
         st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
-
 
 # -----------------------------------------------------------
 # DISEASE RECOGNITION PAGE
@@ -193,16 +160,21 @@ elif page == "DISEASE RECOGNITION":
             if model is None:
                 st.error("❌ Model not loaded!")
             else:
+                st.info("🔮 Predict by AgriNext Team")
                 idx, disease, conf = predict_image(temp_path)
+
                 st.success(f"🌱 Predicted Disease: **{disease}**")
                 st.info(f"📊 Confidence: **{conf*100:.2f}%**")
-
 
 # -----------------------------------------------------------
 # FOOTER
 # -----------------------------------------------------------
 st.markdown("""
-<div style='background:#111; padding:12px; border-radius:10px; margin-top:40px; color:white; text-align:center;'>
-Developed by <b>Team Agri🌾Sens</b> | Powered by Streamlit
+<div style='background:#111; padding:15px; border-radius:10px; margin-top:40px; color:white; text-align:center;'>
+Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
+
+
+
+  
