@@ -181,7 +181,7 @@ elif page == "DISEASE RECOGNITION":
 
     if uploaded:
         # show a smaller preview (width fixed)
-        st.image(uploaded, width=360)
+        st.image(uploaded, width=407 margin-left: 238;)
         temp_path = "uploaded_temp.jpg"
         with open(temp_path, "wb") as f:
             f.write(uploaded.getbuffer())
@@ -208,6 +208,7 @@ elif page == "DISEASE RECOGNITION":
 # FOOTER (compact)
 # -----------------------------------------------------------
 st.markdown("<div class='app-footer'>Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit</div>", unsafe_allow_html=True)
+
 
 
 
