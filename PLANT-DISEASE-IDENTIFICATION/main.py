@@ -74,7 +74,30 @@ CLASS_NAMES = [
 ]
 
 
+# -----------------------------------------------------------
+# AUTO MODEL LOADER (ERROR-FREE)
+# -----------------------------------------------------------
+@st.cache_resource
+def load_model():
+    target_name = "trained_plant_disease_model.keras"
+    found_path = None
 
+    for root, dirs, files in os.walk(".", topdown=True):
+        if target_name in files:
+            found_path = os.path.join(root, target_name)
+            break
+
+    st.write("🔍 Searching for model...")
+
+    if found_path:
+        st.success(f"✅ Model Found at: {found_path}")
+        return tf.keras.models.load_model(found_path)
+
+    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras in your repo.")
+    return None
+
+
+model = load_model()
 # -----------------------------------------------------------
 # PREDICTION FUNCTION (FINAL + FIXED)
 # -----------------------------------------------------------
@@ -151,6 +174,7 @@ st.markdown("""
 Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
