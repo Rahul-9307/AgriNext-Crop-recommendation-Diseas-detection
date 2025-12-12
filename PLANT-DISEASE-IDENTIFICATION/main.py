@@ -58,10 +58,11 @@ st.markdown("""
 # -----------------------------------------------------------
 # HERO IMAGE (centered & smaller)
 # -----------------------------------------------------------
-st.markdown("<div class='hero-box'>", unsafe_allow_html=True)
-# smaller hero width to make page compact and centered
-st.image(HERO_IMAGE, width=520)
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown(f"""
+<div class='hero-wrapper'>
+    <img src='{HERO_IMAGE}' class='hero-img'>
+</div>
+""", unsafe_allow_html=True)
 
 # -----------------------------------------------------------
 # PAGE SELECTOR (centered)
@@ -192,5 +193,6 @@ elif page == "DISEASE RECOGNITION":
 # FOOTER (compact)
 # -----------------------------------------------------------
 st.markdown("<div class='app-footer'>Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit</div>", unsafe_allow_html=True)
+
 
 
