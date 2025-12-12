@@ -35,7 +35,8 @@ st.markdown("""
     justify-content: center;
 }
 .hero-img {
-    width: 95%;
+    margin-top: 51px;
+    width: 100%;
     border-radius: 16px;
     border: 2px solid #2ecc71;
     box-shadow: 0px 0px 10px rgba(0,255,140,0.20);
@@ -193,6 +194,7 @@ elif page == "DISEASE RECOGNITION":
 # FOOTER (compact)
 # -----------------------------------------------------------
 st.markdown("<div class='app-footer'>Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit</div>", unsafe_allow_html=True)
+
 
 
 
