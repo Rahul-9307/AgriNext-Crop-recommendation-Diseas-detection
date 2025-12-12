@@ -7,7 +7,7 @@
 <h3 align="center">🚀 AI-Powered Farming Assistant with 3D UI & Modern Animations</h3>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/banner.png" width="85%" alt="AgriNext Banner"/>
+  <img src="https://raw.githubusercontent.com/Rahul-9307/AgriNext-Crop-recommendation-Diseas-detection/main/image.png" width="85%" alt="AgriNext Custom Banner"/>
 </p>
 
 <div align="center">
@@ -46,22 +46,7 @@
 
 ---
 
-## 🎨 **Premium 3D Demo**
 
-<div align="center">
-  <img src="https://i.pinimg.com/originals/91/d5/71/91d571b1be6c0da5fc7f9c9a2eb6a808.gif" width="550" alt="3D UI Demo"/>
-  <br><br>
-  <em>✨ Glassmorphism + Floating Cards + Smooth Transitions</em>
-</div>
-
----
-
----
-
-## 🚀 **Quick Start**
-
-
----
 
 ## 📊 **Performance Metrics**
 
@@ -80,7 +65,7 @@
 **Rahul Patil**  
 🌟 *Building AI for Farmers*  
 [![GitHub Follow](https://img.shields.io/github/followers/Rahul-9307?style=social)](https://github.com/Rahul-9307)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=social&logo=linkedin&logoColor=white)](https://linkedin.com/in/rahul-patil)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=social&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rahul-patil-747a642ab/)
 
 </div>
 
@@ -94,9 +79,7 @@
 
 <p>👆 **Star us to support farmers!**</p>
 
-![Footer Banner](https://user-images.githubusercontent.com/74038190/216902100-e0b35b6b-6e38-486d-98d7-eda888f4cf62.png)
 
 </div>
 
-## 🛠️ **Tech Architecture**
 
