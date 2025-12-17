@@ -10,7 +10,7 @@ from sklearn.tree import DecisionTreeRegressor
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Agri🌾Next ",
+    page_title="Agri🌾Next- Smart Agriculture Intelligence Platform ",
     page_icon="",
     layout="wide"
 )
