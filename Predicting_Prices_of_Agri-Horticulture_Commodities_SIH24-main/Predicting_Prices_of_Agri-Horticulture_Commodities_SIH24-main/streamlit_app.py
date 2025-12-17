@@ -1,3 +1,111 @@
+# app.py
+import streamlit as st
+import pandas as pd
+import numpy as np
+import random
+from datetime import datetime
+from sklearn.tree import DecisionTreeRegressor
+import os
+
+# -------------------------------------------------
+# PAGE CONFIG
+# -------------------------------------------------
+st.set_page_config(
+    page_title="AgriNext 🌾",
+    page_icon="🌾",
+    layout="wide"
+)
+
+st.title("🌾 AgriNext – Crop Price Prediction System")
+st.caption("AI based agriculture market price forecasting (Educational Project)")
+
+# -------------------------------------------------
+# DATA CONFIG
+# -------------------------------------------------
+BASE_PRICE = {
+    "Paddy": 1245.5, "Arhar": 3200, "Bajra": 1175, "Barley": 980,
+    "Copra": 5100, "Cotton": 3600, "Sesamum": 4200, "Gram": 2800,
+    "Groundnut": 3700, "Jowar": 1520, "Maize": 1175, "Masoor": 2800,
+    "Moong": 3500, "Niger": 3500, "Ragi": 1500, "Rape": 2500,
+    "Jute": 1675, "Safflower": 2500, "Soyabean": 2200,
+    "Sugarcane": 2250, "Sunflower": 3700, "Urad": 4300, "Wheat": 1350
+}
+
+ANNUAL_RAINFALL = [29, 21, 37.5, 30.7, 52.6, 150, 299, 251.7, 179.2, 70.5, 39.8, 10.9]
+
+DATASET_PATH = "static"   # keep csv inside static folder
+
+# -------------------------------------------------
+# MODEL CLASS
+# -------------------------------------------------
+class Commodity:
+    def __init__(self, csv_path):
+        data = pd.read_csv(csv_path)
+        self.X = data.iloc[:, :-1].values
+        self.Y = data.iloc[:, 3].values
+
+        depth = random.randint(7, 15)
+        self.model = DecisionTreeRegressor(max_depth=depth)
+        self.model.fit(self.X, self.Y)
+
+    def predict(self, month, year, rainfall):
+        X = np.array([[month, year, rainfall]])
+        return self.model.predict(X)[0]
+
+# -------------------------------------------------
+# LOAD MODEL (CACHED)
+# -------------------------------------------------
+@st.cache_resource
+def load_model(crop):
+    file = os.path.join(DATASET_PATH, f"{crop}.csv")
+    return Commodity(file)
+
+# -------------------------------------------------
+# UI
+# -------------------------------------------------
+crop_name = st.selectbox(
+    "🌱 Select Crop",
+    sorted(BASE_PRICE.keys())
+)
+
+month = st.selectbox("📅 Month", list(range(1, 13)))
+year = st.selectbox("📆 Year", list(range(2024, 2031)))
+
+rainfall = ANNUAL_RAINFALL[month - 1]
+
+if st.button("🔍 Predict Price"):
+    model = load_model(crop_name)
+    wpi = model.predict(month, year, rainfall)
+
+    final_price = round((wpi * BASE_PRICE[crop_name]) / 100, 2)
+
+    st.success(f"💰 Expected Market Price of **{crop_name}**")
+    st.metric(label="Price (₹ / Quintal)", value=f"₹ {final_price}")
+
+    # 6 Months Forecast
+    st.subheader("📈 6 Months Forecast")
+    forecast = []
+
+    for i in range(1, 7):
+        m = month + i if month + i <= 12 else month + i - 12
+        y = year if month + i <= 12 else year + 1
+        r = ANNUAL_RAINFALL[m - 1]
+        p = model.predict(m, y, r)
+        price = round((p * BASE_PRICE[crop_name]) / 100, 2)
+        forecast.append(price)
+
+    chart_df = pd.DataFrame({
+        "Month": ["+1", "+2", "+3", "+4", "+5", "+6"],
+        "Price": forecast
+    }).set_index("Month")
+
+    st.line_chart(chart_df)
+
+# -------------------------------------------------
+# FOOTER
+# -------------------------------------------------
+st.divider()
+st.caption("👨‍💻 Developed by AgriNext Team | For Academic Use Only")
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar  2 21:46:27 2019
