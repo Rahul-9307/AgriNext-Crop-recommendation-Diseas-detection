@@ -2,34 +2,44 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import random
-from datetime import datetime
 from sklearn.tree import DecisionTreeRegressor
 import os
 
 # -------------------------------------------------
 # PAGE CONFIG
 # -------------------------------------------------
-st.set_page_config(
-    page_title="AgriNext 🌾",
-    page_icon="🌾",
-    layout="wide"
-)
-
+st.set_page_config(page_title="AgriNext 🌾", layout="wide")
 st.title("🌾 AgriNext – Crop Price Prediction")
-st.caption("AI based agriculture price forecasting (Educational Project)")
 
 # -------------------------------------------------
-# SAFE BASE PATH (VERY IMPORTANT)
+# AUTO FIND STATIC FOLDER (NO PATH BUG)
 # -------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATASET_PATH = os.path.join(
-    BASE_DIR,
-    "Predicting_Prices_of_Agri-Horticulture_Commodities_SIH24-main",
-    "static"
-)
+
+STATIC_DIR = None
+for root, dirs, files in os.walk(BASE_DIR):
+    if "static" in dirs:
+        STATIC_DIR = os.path.join(root, "static")
+        break
+
+if STATIC_DIR is None:
+    st.error("❌ static folder not found in repository")
+    st.stop()
 
 # -------------------------------------------------
-# CONSTANT DATA
+# LOAD AVAILABLE CSV FILES
+# -------------------------------------------------
+csv_files = [f for f in os.listdir(STATIC_DIR) if f.lower().endswith(".csv")]
+
+if not csv_files:
+    st.error("❌ No CSV files found inside static folder")
+    st.stop()
+
+# Crop names from CSV
+CROPS = sorted([os.path.splitext(f)[0] for f in csv_files])
+
+# -------------------------------------------------
+# BASE PRICE (OPTIONAL DEFAULT)
 # -------------------------------------------------
 BASE_PRICE = {
     "Paddy": 1245.5, "Arhar": 3200, "Bajra": 1175, "Barley": 980,
@@ -47,80 +57,60 @@ ANNUAL_RAINFALL = [29, 21, 37.5, 30.7, 52.6, 150, 299, 251.7, 179.2, 70.5, 39.8,
 # -------------------------------------------------
 class Commodity:
     def __init__(self, csv_path):
-        data = pd.read_csv(csv_path)
-        self.X = data.iloc[:, :-1].values
-        self.Y = data.iloc[:, 3].values
+        df = pd.read_csv(csv_path)
+        self.X = df.iloc[:, :-1].values
+        self.Y = df.iloc[:, 3].values
 
-        depth = random.randint(7, 15)
-        self.model = DecisionTreeRegressor(max_depth=depth)
+        self.model = DecisionTreeRegressor(
+            max_depth=random.randint(7, 15)
+        )
         self.model.fit(self.X, self.Y)
 
-    def predict(self, month, year, rainfall):
-        X = np.array([[month, year, rainfall]])
-        return self.model.predict(X)[0]
+    def predict(self, m, y, r):
+        return self.model.predict(np.array([[m, y, r]]))[0]
 
 # -------------------------------------------------
-# LOAD MODEL (CACHED)
+# CACHE MODEL
 # -------------------------------------------------
 @st.cache_resource
-def load_model(crop):
-    file_path = os.path.join(DATASET_PATH, f"{crop}.csv")
-
-    if not os.path.exists(file_path):
-        st.error(f"❌ CSV file not found:\n{file_path}")
-        st.stop()
-
-    return Commodity(file_path)
+def load_model(csv_file):
+    return Commodity(csv_file)
 
 # -------------------------------------------------
-# UI CONTROLS
+# UI
 # -------------------------------------------------
-crop_name = st.selectbox("🌱 Select Crop", sorted(BASE_PRICE.keys()))
-month = st.selectbox("📅 Select Month", list(range(1, 13)))
-year = st.selectbox("📆 Select Year", list(range(2024, 2031)))
+crop = st.selectbox("🌱 Select Crop", CROPS)
+month = st.selectbox("📅 Month", list(range(1, 13)))
+year = st.selectbox("📆 Year", list(range(2024, 2031)))
 
 rainfall = ANNUAL_RAINFALL[month - 1]
 
 # -------------------------------------------------
-# PREDICTION
+# PREDICT
 # -------------------------------------------------
 if st.button("🔍 Predict Price"):
-    model = load_model(crop_name)
+    csv_path = os.path.join(STATIC_DIR, f"{crop}.csv")
 
+    model = load_model(csv_path)
     wpi = model.predict(month, year, rainfall)
-    price = round((wpi * BASE_PRICE[crop_name]) / 100, 2)
 
-    st.success(f"💰 Predicted Market Price for **{crop_name}**")
-    st.metric("Price (₹ / Quintal)", f"₹ {price}")
+    base = BASE_PRICE.get(crop.capitalize(), 2000)
+    price = round((wpi * base) / 100, 2)
 
-    # -----------------------------
-    # 6 MONTH FORECAST
-    # -----------------------------
+    st.success(f"💰 Predicted Price for **{crop}**")
+    st.metric("₹ / Quintal", f"₹ {price}")
+
+    # Forecast
     st.subheader("📈 6 Month Forecast")
-
-    forecast_prices = []
-    months = []
+    prices = []
 
     for i in range(1, 7):
         m = month + i if month + i <= 12 else month + i - 12
         y = year if month + i <= 12 else year + 1
         r = ANNUAL_RAINFALL[m - 1]
+        p = model.predict(m, y, r)
+        prices.append(round((p * base) / 100, 2))
 
-        pred = model.predict(m, y, r)
-        final_price = round((pred * BASE_PRICE[crop_name]) / 100, 2)
+    st.line_chart(pd.DataFrame(prices, columns=["Price"]))
 
-        months.append(f"+{i}")
-        forecast_prices.append(final_price)
-
-    df = pd.DataFrame({
-        "Month": months,
-        "Price": forecast_prices
-    }).set_index("Month")
-
-    st.line_chart(df)
-
-# -------------------------------------------------
-# FOOTER
-# -------------------------------------------------
-st.divider()
-st.caption("👨‍💻 Developed by AgriNext Team | Streamlit Version")
+st.caption("👨‍💻 AgriNext | Streamlit Stable Build ✅")
