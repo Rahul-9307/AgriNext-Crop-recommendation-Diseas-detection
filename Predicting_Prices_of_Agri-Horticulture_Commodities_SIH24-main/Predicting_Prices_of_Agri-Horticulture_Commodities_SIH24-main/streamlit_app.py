@@ -10,8 +10,8 @@ from sklearn.tree import DecisionTreeRegressor
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="AgriNext 🌾",
-    page_icon="🌾",
+    page_title="Agri🌾Next-Smart Agriculture Intelligence Platform",
+    page_icon="",
     layout="wide"
 )
 
@@ -173,9 +173,8 @@ st.markdown(
     </style>
 
     <div class="agrifooter">
-        🌾 <span>AgriNext</span> – Smart Agriculture Intelligence Platform <br>
-        👨‍💻 Developed by <b>Rahul Patil</b> <br>
-        🔗 <a href="https://github.com/Rahul-9307" target="_blank">GitHub</a> |
+        🌾 <span>Agri🌾Next</span> – Smart Agriculture Intelligence Platform <br>
+        👨‍💻 Developed by <b>Agri🌾Next Team</b> <br> |
         📘 Educational Project | Made with ❤️ for Farmers
     </div>
     """,
