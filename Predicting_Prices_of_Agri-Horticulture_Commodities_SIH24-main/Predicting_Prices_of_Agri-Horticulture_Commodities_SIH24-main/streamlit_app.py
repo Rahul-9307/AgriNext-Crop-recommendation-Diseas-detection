@@ -10,12 +10,12 @@ from sklearn.tree import DecisionTreeRegressor
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Agri🌾Next- Smart Agriculture Intelligence Platform ",
-    page_icon="",
+    page_title="AgriNext 🌾",
+    page_icon="🌾",
     layout="wide"
 )
 
-st.title(" Agri🌾Next – Crop Price Prediction")
+st.title("🌾 AgriNext – Crop Price Prediction")
 st.caption("AI based agriculture market forecasting (Educational Project)")
 
 # -------------------------------------------------
@@ -151,8 +151,6 @@ st.markdown("---")
 
 st.markdown(
     """
-   st.markdown(
-    """
     <style>
     .agrifooter {
         text-align: center;
@@ -173,14 +171,11 @@ st.markdown(
         text-decoration: underline;
     }
     </style>
-    """,
-    unsafe_allow_html=True
-)
-
 
     <div class="agrifooter">
-         <span>Agri🌾Next</span> – Smart Agriculture Intelligence Platform <br>
-        👨‍💻 Developed by <b>Agri🌾Next Team</b> <br>
+        🌾 <span>AgriNext</span> – Smart Agriculture Intelligence Platform <br>
+        👨‍💻 Developed by <b>Rahul Patil</b> <br>
+        🔗 <a href="https://github.com/Rahul-9307" target="_blank">GitHub</a> |
         📘 Educational Project | Made with ❤️ for Farmers
     </div>
     """,
