@@ -4,3 +4,7 @@ numpy
 pandas
 scikit-learn
 gunicorn
+streamlit
+numpy
+pandas
+scikit-learn
