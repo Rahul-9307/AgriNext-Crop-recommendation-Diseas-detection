@@ -94,34 +94,17 @@ All forecast results are presented through:
 
 ---
 
-## 🔧 How to Run Locally
-
-```bash
-# Step 1: Clone the repository
-git clone https://github.com/souravlouha/Crop_Prediction.git
-cd Crop_Prediction
-
-# Step 2: Install dependencies
-pip install -r requirements.txt
-
-# Step 3: Start the Flask server
-python app.py
-
-# Step 4: Open in browser
-# Go to: http://127.0.0.1:5000
-
-```
 
 ----------
 
 ### 📷 Screenshots
 (Embed your screenshots here using this format)
 
-<img src="static/Screenshot%20(23).png" width="700"/>
-<img src="static/Screenshot%20(24).png" width="700"/>
-<img src="static/Screenshot%20(25).png" width="700"/>
-<img src="static/Screenshot%20(26).png" width="700"/>
-<img src="static/Screenshot%20(27).png" width="700"/>
+<img src="static/Screenshot%2fdf0(23).png" width="700"/>
+<img src="static/Screenshotfdf%20(24).png" width="700"/>
+<img src="static/Screenshotfdf%20(25).png" width="700"/>
+<img src="static/Screenshoffdfdft%20(26).png" width="700"/>
+<img src="static/Screenshdfdfot%20(27).png" width="700"/>
 
 ----------
 
