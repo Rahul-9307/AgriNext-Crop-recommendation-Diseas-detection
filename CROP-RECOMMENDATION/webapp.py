@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from PIL import Image
 import datetime
+import os
 
 # ------------------------------
 # Page Configuration
@@ -13,20 +14,27 @@ import datetime
 st.set_page_config(page_title="AgriNext", layout="wide")
 
 # ------------------------------
-# Load Image (Optional)
+# Load Image Safely
 # ------------------------------
 try:
-    img = Image.open("crop.png")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(BASE_DIR, "crop.png")
+    img = Image.open(image_path)
     st.image(img, use_column_width=True)
 except:
     pass
 
 # ------------------------------
-# Train Model (Only Once)
+# Train Model (Cloud Safe)
 # ------------------------------
 @st.cache_resource
 def train_model():
-    df = pd.read_csv("Crop_recommendation.csv")
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(BASE_DIR, "Crop_recommendation.csv")
+
+    df = pd.read_csv(csv_path)
+
     X = df[['N','P','K','temperature','humidity','ph','rainfall']]
     y = df['label']
 
@@ -139,19 +147,16 @@ def main():
         st.info(f"📊 Model Accuracy: {round(accuracy*100,2)}%")
         st.balloons()
 
-        # Get Farmer Plan
         plan = get_crop_plan(prediction)
 
         st.markdown("## 📋 Complete Farmer Action Plan")
         st.text(plan)
 
-        # Create Downloadable Report (No PDF dependency)
         report_text = f"""
 AgriNext Smart Crop Report
 Date: {datetime.date.today()}
 
 Recommended Crop: {prediction}
-
 Model Accuracy: {round(accuracy*100,2)}%
 
 {plan}
