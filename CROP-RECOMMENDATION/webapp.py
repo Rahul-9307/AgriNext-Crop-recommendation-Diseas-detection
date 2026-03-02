@@ -133,7 +133,7 @@ def generate_pdf(crop, plan_text):
 # ------------------------------
 def main():
 
-    st.title("🌾 AgriNext - Smart Crop Recommendation")
+    st.title("🌾 AgriNext4566 - Smart Crop Recommendation")
 
     st.sidebar.title("Enter Crop Details")
 
@@ -175,3 +175,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
