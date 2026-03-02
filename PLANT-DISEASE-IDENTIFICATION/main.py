@@ -1,55 +1,62 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import os
 from PIL import Image
 
 st.set_page_config(page_title="AgriNext 🌾 Disease Detection", layout="wide")
 
-# ==============================
-# LOAD MODEL (Load Only Once)
-# ==============================
+# ==========================================
+# LOAD MODEL (SAFE FOR STREAMLIT CLOUD)
+# ==========================================
 @st.cache_resource
 def load_model():
-    model = tf.keras.models.load_model("trained_plant_disease_model.keras")
-    return model
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(BASE_DIR, "trained_plant_disease_model.keras")
+
+    if not os.path.exists(model_path):
+        st.error("❌ Model file not found! Please upload trained_plant_disease_model.keras in this folder.")
+        st.stop()
+
+    try:
+        model = tf.keras.models.load_model(model_path)
+        return model
+    except Exception as e:
+        st.error("❌ Error loading model. Check TensorFlow version (Use Python 3.10).")
+        st.stop()
 
 model = load_model()
 
-# ==============================
-# Prediction Function
-# ==============================
+# ==========================================
+# PREDICTION FUNCTION
+# ==========================================
 def model_prediction(test_image):
-    image = Image.open(test_image)
+    image = Image.open(test_image).convert("RGB")
     image = image.resize((128, 128))
-    input_arr = np.array(image)
-    
-    # Normalize image (VERY IMPORTANT)
-    input_arr = input_arr / 255.0
-    
-    # Convert to batch
+    input_arr = np.array(image) / 255.0  # Normalization
     input_arr = np.expand_dims(input_arr, axis=0)
-    
     predictions = model.predict(input_arr)
     return np.argmax(predictions)
 
-# ==============================
-# Sidebar
-# ==============================
+# ==========================================
+# SIDEBAR
+# ==========================================
 st.sidebar.title("🌾 AgriNext")
 app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
 
-# ==============================
-# Home Page
-# ==============================
+# ==========================================
+# HOME PAGE
+# ==========================================
 if app_mode == "HOME":
     st.markdown("<h1 style='text-align: center;'>SMART PLANT DISEASE DETECTION SYSTEM 🌱</h1>", unsafe_allow_html=True)
     st.write("Upload a plant leaf image and detect disease instantly using AI.")
 
-# ==============================
-# Disease Recognition Page
-# ==============================
+# ==========================================
+# DISEASE RECOGNITION PAGE
+# ==========================================
 elif app_mode == "DISEASE RECOGNITION":
-    st.header("🔍 DISEASE RECOGNITION")
+
+    st.header("🔍 Plant Disease Recognition")
 
     test_image = st.file_uploader("📸 Upload Leaf Image", type=["jpg", "png", "jpeg"])
 
@@ -57,8 +64,8 @@ elif app_mode == "DISEASE RECOGNITION":
         st.image(test_image, caption="Uploaded Image", use_column_width=True)
 
         if st.button("🚀 Predict"):
-            st.snow()
-            result_index = model_prediction(test_image)
+            with st.spinner("Analyzing image..."):
+                result_index = model_prediction(test_image)
 
             class_name = [
                 'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
@@ -87,4 +94,4 @@ elif app_mode == "DISEASE RECOGNITION":
             st.success(f"🌿 Model Prediction: {class_name[result_index]}")
 
     else:
-        st.warning("⚠ Please upload an image first.")
+        st.info("Please upload an image to continue.")
