@@ -2,187 +2,143 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn import metrics
-from PIL import Image
-import datetime
+import warnings
 import os
-import io
+from PIL import Image
 
-# PDF
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from reportlab.pdfbase import pdfmetrics
+warnings.filterwarnings("ignore")
 
-st.set_page_config(page_title="AgriNext", layout="wide")
+st.set_page_config(page_title="Agri🌾Next Crop Recommendation", layout="wide")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ---------------------------------------
+# LOAD IMAGE
+# ---------------------------------------
+def load_image(filename):
+    return Image.open(os.path.join(os.path.dirname(__file__), filename))
 
-# ------------------------------
-# Load Image
-# ------------------------------
-try:
-    image_path = os.path.join(BASE_DIR, "crop.png")
-    img = Image.open(image_path)
-    st.image(img, use_column_width=True)
-except:
-    pass
+banner = load_image("crop.png")
+st.image(banner, use_column_width=True)
 
-# ------------------------------
-# Train Model
-# ------------------------------
-@st.cache_resource
-def train_model():
-    csv_path = os.path.join(BASE_DIR, "Crop_recommendation.csv")
-    df = pd.read_csv(csv_path)
+# ---------------------------------------
+# LOAD CSV
+# ---------------------------------------
+csv_path = os.path.join(os.path.dirname(__file__), "Crop_recommendation.csv")
+df = pd.read_csv(csv_path)
 
-    X = df[['N','P','K','temperature','humidity','ph','rainfall']]
-    y = df['label']
+X = df[['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']]
+y = df['label']
 
-    Xtrain, Xtest, Ytrain, Ytest = train_test_split(
-        X, y, test_size=0.3, random_state=42
-    )
+# ---------------------------------------
+# TRAIN MODEL
+# ---------------------------------------
+model = RandomForestClassifier(n_estimators=60, random_state=42)
+model.fit(X, y)
 
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(Xtrain, Ytrain)
+# ---------------------------------------
+# MARATHI NAME MAPPING
+# ---------------------------------------
+marathi_names = {
+    "rice": "तांदूळ",
+    "maize": "मका",
+    "chickpea": "हरभरा",
+    "kidneybeans": "राजमा",
+    "pigeonpeas": "तूर",
+    "mothbeans": "मटकी",
+    "mungbean": "मूग",
+    "blackgram": "उडीद",
+    "lentil": "मसूर",
+    "pomegranate": "डाळिंब",
+    "banana": "केळी",
+    "mango": "आंबा",
+    "grapes": "द्राक्षे",
+    "watermelon": "कलिंगड",
+    "muskmelon": "खरबूज",
+    "apple": "सफरचंद",
+    "orange": "संत्रे",
+    "papaya": "पपई",
+    "coconut": "नारळ",
+    "cotton": "कापूस",
+    "jute": "जूट",
+    "coffee": "कॉफी"
+}
 
-    accuracy = metrics.accuracy_score(Ytest, model.predict(Xtest))
-    return model, accuracy
+# ---------------------------------------
+# PREDICT FUNCTION
+# ---------------------------------------
+def predict_crop(n, p, k, temp, hum, ph, rain):
+    data = np.array([[n, p, k, temp, hum, ph, rain]])
+    return model.predict(data)[0]
 
-model, accuracy = train_model()
 
-# ------------------------------
-# Prediction
-# ------------------------------
-def predict_crop(n, p, k, t, h, ph, r):
-    input_data = np.array([[n, p, k, t, h, ph, r]])
-    return model.predict(input_data)[0]
+# ---------------------------------------
+# MAIN UI
+# ---------------------------------------
+def main():
 
-# ------------------------------
-# Farmer Plan
-# ------------------------------
-def get_crop_plan(crop, language):
+    st.title("AgriNext - Smart Crop Recommendation")
 
-    if language == "English":
-        return f"""
-Crop: {crop}
+    # SIDEBAR
+    st.sidebar.title("Agri🌾Next")
+    st.sidebar.header("Enter Crop Details")
 
-Soil:
-- Use fertile well-drained soil
-Fertilizer:
-- Apply balanced NPK
-Water:
-- Maintain proper irrigation
-Tip:
-- Monitor pests regularly
-- Check market rate before selling
-"""
-    else:
-        return f"""
-पीक: {crop}
+    nitrogen = st.sidebar.number_input("Nitrogen (N)", 0.0, 140.0, 0.0)
+    phosphorus = st.sidebar.number_input("Phosphorus (P)", 0.0, 145.0, 0.0)
+    potassium = st.sidebar.number_input("Potassium (K)", 0.0, 205.0, 0.0)
+    temperature = st.sidebar.number_input("Temperature (°C)", 0.0, 51.0, 0.0)
+    humidity = st.sidebar.number_input("Humidity (%)", 0.0, 100.0, 0.0)
+    ph_value = st.sidebar.number_input("pH Level", 0.0, 14.0, 0.0)
+    rainfall = st.sidebar.number_input("Rainfall (mm)", 0.0, 500.0, 0.0)
 
-जमीन:
-- सुपीक व निचरा होणारी जमीन वापरा
-खत:
-- संतुलित NPK खतांचा वापर करा
-पाणी:
-- योग्य सिंचन व्यवस्था ठेवा
-सूचना:
-- किड नियंत्रण नियमित करा
-- बाजारभाव तपासून विक्री करा
-"""
+    # PREDICT BUTTON
+    if st.sidebar.button("Predict"):
+        values = np.array([nitrogen, phosphorus, potassium, temperature, humidity, ph_value, rainfall])
 
-# ------------------------------
-# PDF Generator (Marathi Supported)
-# ------------------------------
-def generate_pdf(crop, plan, accuracy, language):
+        if (values == 0).all():
+            st.error("Please fill valid values before prediction.")
+        else:
+            crop = predict_crop(*values)
+            marathi_crop = marathi_names.get(crop.lower(), crop)
 
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+            # RESULT
+            st.subheader("🌾 Recommended Crop")
+            st.success(f"{crop} ({marathi_crop})")
 
-    # Register Unicode font
-    pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+            # -------------------------
+            # ENGLISH TIPS
+            # -------------------------
+            st.subheader("✨ Tips & Tricks (English)")
+            st.write(f"""
+- Maintain soil moisture properly.  
+- Apply recommended fertilizers for **{crop}**.  
+- Monitor pH and rainfall conditions.  
+- Use organic compost for better soil health.  
+- Ensure proper sunlight and irrigation.  
+""")
 
-    y = height - 50
+            # -------------------------
+            # MARATHI TIPS
+            # -------------------------
+            st.subheader("🌾 शेतकऱ्यांसाठी टिप्स (Marathi)")
+            st.write(f"""
+- मातीतील आर्द्रता योग्य प्रमाणात ठेवावी.  
+- **{marathi_crop}** पिकासाठी शिफारस केलेले खत वेळेवर वापरावे.  
+- मातीचे pH आणि पावसाचे प्रमाण तपासत राहावे.  
+- सेंद्रिय खते (कंपोस्ट) वापरल्यास उत्पादन वाढते.  
+- योग्य सूर्यप्रकाश आणि पाणी व्यवस्थापन करणे महत्वाचे आहे.  
+""")
 
-    if language == "Marathi":
-        c.setFont('STSong-Light', 14)
-        c.drawString(50, y, "AgriNext स्मार्ट पीक अहवाल")
-    else:
-        c.setFont("Helvetica", 14)
-        c.drawString(50, y, "AgriNext Smart Crop Report")
+            # -------------------------
+            # SUPPORT SECTION (BOTTOM)
+            # -------------------------
+            st.subheader("🤝 Support")
+            st.write("""
+**Support by AgriNext Team**  
+For any help or guidance, feel free to reach out to us.  
+""")
 
-    y -= 30
-    c.setFont('STSong-Light' if language == "Marathi" else "Helvetica", 12)
-    c.drawString(50, y, f"Date: {datetime.date.today()}")
+    
 
-    y -= 20
-    c.drawString(50, y, f"Recommended Crop: {crop}")
 
-    y -= 20
-    c.drawString(50, y, f"Model Accuracy: {round(accuracy*100,2)}%")
-
-    y -= 40
-
-    for line in plan.split("\n"):
-        if y < 50:
-            c.showPage()
-            c.setFont('STSong-Light' if language == "Marathi" else "Helvetica", 12)
-            y = height - 50
-        c.drawString(50, y, line.strip())
-        y -= 20
-
-    c.save()
-    buffer.seek(0)
-    return buffer
-
-# ------------------------------
-# UI
-# ------------------------------
-st.title("🌾 AgriNext - Smart Crop Recommendation")
-
-language = st.selectbox("🌍 Select Language / भाषा निवडा", ["English", "Marathi"])
-
-st.sidebar.title("Enter Crop Details")
-
-nitrogen = st.sidebar.number_input("Nitrogen (N)", 0.0, 140.0, 0.0)
-phosphorus = st.sidebar.number_input("Phosphorus (P)", 0.0, 145.0, 0.0)
-potassium = st.sidebar.number_input("Potassium (K)", 0.0, 205.0, 0.0)
-temperature = st.sidebar.number_input("Temperature (°C)", 0.0, 50.0, 0.0)
-humidity = st.sidebar.number_input("Humidity (%)", 0.0, 100.0, 0.0)
-ph = st.sidebar.number_input("pH Level", 0.0, 14.0, 0.0)
-rainfall = st.sidebar.number_input("Rainfall (mm)", 0.0, 500.0, 0.0)
-
-if st.sidebar.button("Predict Crop"):
-
-    # Validation
-    if 0 in [nitrogen, phosphorus, potassium, temperature, humidity, ph, rainfall]:
-        st.error("⚠ कृपया सर्व मूल्ये भरा / Please enter all values")
-        st.stop()
-
-    prediction = predict_crop(
-        nitrogen, phosphorus, potassium,
-        temperature, humidity, ph, rainfall
-    )
-
-    if language == "English":
-        st.success(f"✅ Recommended Crop: {prediction}")
-        st.info(f"📊 Model Accuracy: {round(accuracy*100,2)}%")
-    else:
-        st.success(f"✅ शिफारस केलेले पीक: {prediction}")
-        st.info(f"📊 मॉडेल अचूकता: {round(accuracy*100,2)}%")
-
-    plan = get_crop_plan(prediction, language)
-    st.markdown("## 📋 Farmer Action Plan")
-    st.text(plan)
-
-    pdf_buffer = generate_pdf(prediction, plan, accuracy, language)
-
-    st.download_button(
-        label="📥 Download PDF Report",
-        data=pdf_buffer,
-        file_name="AgriNext_Report.pdf",
-        mime="application/pdf"
-    )
+# RUN APP
+if __name__ == "__main__":
+    main()
