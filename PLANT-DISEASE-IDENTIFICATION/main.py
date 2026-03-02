@@ -52,4 +52,5 @@ elif(app_mode=="DISEASE RECOGNITION"):
                     'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite', 
                     'Tomato___Target_Spot', 'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
                       'Tomato___healthy']
-        st.success("Model is Predicting it's a {}".format(class_name[result_index])) es me bar bar ek di dicese dikh rha hai
+        st.success("Model is Predicting it's a {}".format(class_name[result_index]))
+
