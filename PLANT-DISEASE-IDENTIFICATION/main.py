@@ -5,57 +5,86 @@ from PIL import Image
 
 st.set_page_config(page_title="AgriNext 🌾 Disease Detection", layout="wide")
 
-# Load Model
+# ==============================
+# LOAD MODEL (Load Only Once)
+# ==============================
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model("plant_disease_model.h5")
+    model = tf.keras.models.load_model("trained_plant_disease_model.keras")
+    return model
 
 model = load_model()
 
-# Class Labels
-class_names = [
-    'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
-    'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
-    'Cherry_(including_sour)___healthy', 'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
-    'Corn_(maize)___Common_rust_', 'Corn_(maize)___Northern_Leaf_Blight',
-    'Corn_(maize)___healthy', 'Grape___Black_rot', 'Grape___Esca_(Black_Measles)',
-    'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 'Grape___healthy',
-    'Orange___Haunglongbing_(Citrus_greening)', 'Peach___Bacterial_spot',
-    'Peach___healthy', 'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy',
-    'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy',
-    'Raspberry___healthy', 'Soybean___healthy', 'Squash___Powdery_mildew',
-    'Strawberry___Leaf_scorch', 'Strawberry___healthy', 'Tomato___Bacterial_spot',
-    'Tomato___Early_blight', 'Tomato___Late_blight', 'Tomato___Leaf_Mold',
-    'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite',
-    'Tomato___Target_Spot', 'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
-    'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
-]
-
-def predict_image(uploaded_file):
-    image = Image.open(uploaded_file).convert("RGB")
+# ==============================
+# Prediction Function
+# ==============================
+def model_prediction(test_image):
+    image = Image.open(test_image)
     image = image.resize((128, 128))
-    img_array = np.array(image) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    input_arr = np.array(image)
+    
+    # Normalize image (VERY IMPORTANT)
+    input_arr = input_arr / 255.0
+    
+    # Convert to batch
+    input_arr = np.expand_dims(input_arr, axis=0)
+    
+    predictions = model.predict(input_arr)
+    return np.argmax(predictions)
 
-    prediction = model.predict(img_array)
-    index = np.argmax(prediction)
-    confidence = np.max(prediction)
+# ==============================
+# Sidebar
+# ==============================
+st.sidebar.title("🌾 AgriNext")
+app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
 
-    return class_names[index], confidence
+# ==============================
+# Home Page
+# ==============================
+if app_mode == "HOME":
+    st.markdown("<h1 style='text-align: center;'>SMART PLANT DISEASE DETECTION SYSTEM 🌱</h1>", unsafe_allow_html=True)
+    st.write("Upload a plant leaf image and detect disease instantly using AI.")
 
-st.title("🌿 Smart Plant Disease Detection")
+# ==============================
+# Disease Recognition Page
+# ==============================
+elif app_mode == "DISEASE RECOGNITION":
+    st.header("🔍 DISEASE RECOGNITION")
 
-uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
+    test_image = st.file_uploader("📸 Upload Leaf Image", type=["jpg", "png", "jpeg"])
 
-if uploaded_file:
-    st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+    if test_image is not None:
+        st.image(test_image, caption="Uploaded Image", use_column_width=True)
 
-    if st.button("Predict Disease"):
-        with st.spinner("Analyzing..."):
-            label, confidence = predict_image(uploaded_file)
+        if st.button("🚀 Predict"):
+            st.snow()
+            result_index = model_prediction(test_image)
 
-        st.success(f"🌱 Prediction: {label}")
-        st.info(f"📊 Confidence: {round(confidence*100,2)}%")
+            class_name = [
+                'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
+                'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew', 
+                'Cherry_(including_sour)___healthy', 'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot', 
+                'Corn_(maize)___Common_rust_', 'Corn_(maize)___Northern_Leaf_Blight', 
+                'Corn_(maize)___healthy', 'Grape___Black_rot', 
+                'Grape___Esca_(Black_Measles)', 'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)', 
+                'Grape___healthy', 'Orange___Haunglongbing_(Citrus_greening)', 
+                'Peach___Bacterial_spot', 'Peach___healthy', 
+                'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy', 
+                'Potato___Early_blight', 'Potato___Late_blight', 
+                'Potato___healthy', 'Raspberry___healthy', 
+                'Soybean___healthy', 'Squash___Powdery_mildew', 
+                'Strawberry___Leaf_scorch', 'Strawberry___healthy', 
+                'Tomato___Bacterial_spot', 'Tomato___Early_blight', 
+                'Tomato___Late_blight', 'Tomato___Leaf_Mold', 
+                'Tomato___Septoria_leaf_spot', 
+                'Tomato___Spider_mites Two-spotted_spider_mite', 
+                'Tomato___Target_Spot', 
+                'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 
+                'Tomato___Tomato_mosaic_virus', 
+                'Tomato___healthy'
+            ]
 
-        if confidence < 0.5:
-            st.warning("⚠️ Low confidence. Please upload a clearer image.")
+            st.success(f"🌿 Model Prediction: {class_name[result_index]}")
+
+    else:
+        st.warning("⚠ Please upload an image first.")
