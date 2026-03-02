@@ -10,11 +10,9 @@ import os
 import io
 
 # PDF
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase import pdfmetrics
 
 st.set_page_config(page_title="AgriNext", layout="wide")
@@ -72,13 +70,10 @@ Crop: {crop}
 
 Soil:
 - Use fertile well-drained soil
-
 Fertilizer:
 - Apply balanced NPK
-
 Water:
 - Maintain proper irrigation
-
 Tip:
 - Monitor pests regularly
 - Check market rate before selling
@@ -89,60 +84,57 @@ Tip:
 
 जमीन:
 - सुपीक व निचरा होणारी जमीन वापरा
-
 खत:
 - संतुलित NPK खतांचा वापर करा
-
 पाणी:
 - योग्य सिंचन व्यवस्था ठेवा
-
 सूचना:
 - किड नियंत्रण नियमित करा
 - बाजारभाव तपासून विक्री करा
 """
 
 # ------------------------------
-# PDF Generator
+# PDF Generator (Marathi Supported)
 # ------------------------------
 def generate_pdf(crop, plan, accuracy, language):
 
     buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
 
-    # Register Marathi font
-    font_path = os.path.join(BASE_DIR, "NotoSansDevanagari-Regular.ttf")
-    if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('Devanagari', font_path))
+    # Register Unicode font
+    pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    elements = []
-    styles = getSampleStyleSheet()
+    y = height - 50
 
-    if language == "Marathi" and os.path.exists(font_path):
-        style = ParagraphStyle(
-            'MarathiStyle',
-            parent=styles['Normal'],
-            fontName='Devanagari',
-            fontSize=12
-        )
+    if language == "Marathi":
+        c.setFont('STSong-Light', 14)
+        c.drawString(50, y, "AgriNext स्मार्ट पीक अहवाल")
     else:
-        style = styles["Normal"]
+        c.setFont("Helvetica", 14)
+        c.drawString(50, y, "AgriNext Smart Crop Report")
 
-    title = "AgriNext Smart Crop Report" if language == "English" else "AgriNext स्मार्ट पीक अहवाल"
+    y -= 30
+    c.setFont('STSong-Light' if language == "Marathi" else "Helvetica", 12)
+    c.drawString(50, y, f"Date: {datetime.date.today()}")
 
-    elements.append(Paragraph(title, style))
-    elements.append(Spacer(1, 0.3 * inch))
-    elements.append(Paragraph(f"Date: {datetime.date.today()}", style))
-    elements.append(Spacer(1, 0.2 * inch))
-    elements.append(Paragraph(f"Recommended Crop: {crop}", style))
-    elements.append(Spacer(1, 0.2 * inch))
-    elements.append(Paragraph(f"Model Accuracy: {round(accuracy*100,2)}%", style))
-    elements.append(Spacer(1, 0.4 * inch))
+    y -= 20
+    c.drawString(50, y, f"Recommended Crop: {crop}")
+
+    y -= 20
+    c.drawString(50, y, f"Model Accuracy: {round(accuracy*100,2)}%")
+
+    y -= 40
 
     for line in plan.split("\n"):
-        elements.append(Paragraph(line, style))
-        elements.append(Spacer(1, 0.2 * inch))
+        if y < 50:
+            c.showPage()
+            c.setFont('STSong-Light' if language == "Marathi" else "Helvetica", 12)
+            y = height - 50
+        c.drawString(50, y, line.strip())
+        y -= 20
 
-    doc.build(elements)
+    c.save()
     buffer.seek(0)
     return buffer
 
