@@ -11,9 +11,11 @@ import io
 
 # PDF
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 
 st.set_page_config(page_title="AgriNext", layout="wide")
 
@@ -60,7 +62,7 @@ def predict_crop(n, p, k, t, h, ph, r):
     return model.predict(input_data)[0]
 
 # ------------------------------
-# Farmer Plan (Bilingual)
+# Farmer Plan
 # ------------------------------
 def get_crop_plan(crop, language):
 
@@ -100,31 +102,44 @@ Tip:
 """
 
 # ------------------------------
-# PDF Generator (Cloud Safe)
+# PDF Generator
 # ------------------------------
 def generate_pdf(crop, plan, accuracy, language):
 
     buffer = io.BytesIO()
+
+    # Register Marathi font
+    font_path = os.path.join(BASE_DIR, "NotoSansDevanagari-Regular.ttf")
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont('Devanagari', font_path))
+
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     elements = []
     styles = getSampleStyleSheet()
 
+    if language == "Marathi" and os.path.exists(font_path):
+        style = ParagraphStyle(
+            'MarathiStyle',
+            parent=styles['Normal'],
+            fontName='Devanagari',
+            fontSize=12
+        )
+    else:
+        style = styles["Normal"]
+
     title = "AgriNext Smart Crop Report" if language == "English" else "AgriNext स्मार्ट पीक अहवाल"
 
-    elements.append(Paragraph(f"<b>{title}</b>", styles["Heading1"]))
+    elements.append(Paragraph(title, style))
     elements.append(Spacer(1, 0.3 * inch))
-
-    elements.append(Paragraph(f"Date: {datetime.date.today()}", styles["Normal"]))
+    elements.append(Paragraph(f"Date: {datetime.date.today()}", style))
     elements.append(Spacer(1, 0.2 * inch))
-
-    elements.append(Paragraph(f"Recommended Crop: {crop}", styles["Normal"]))
+    elements.append(Paragraph(f"Recommended Crop: {crop}", style))
     elements.append(Spacer(1, 0.2 * inch))
-
-    elements.append(Paragraph(f"Model Accuracy: {round(accuracy*100,2)}%", styles["Normal"]))
+    elements.append(Paragraph(f"Model Accuracy: {round(accuracy*100,2)}%", style))
     elements.append(Spacer(1, 0.4 * inch))
 
     for line in plan.split("\n"):
-        elements.append(Paragraph(line, styles["Normal"]))
+        elements.append(Paragraph(line, style))
         elements.append(Spacer(1, 0.2 * inch))
 
     doc.build(elements)
@@ -140,15 +155,20 @@ language = st.selectbox("🌍 Select Language / भाषा निवडा", [
 
 st.sidebar.title("Enter Crop Details")
 
-nitrogen = st.sidebar.number_input("Nitrogen (N)", 0.0, 140.0, 50.0)
-phosphorus = st.sidebar.number_input("Phosphorus (P)", 0.0, 145.0, 40.0)
-potassium = st.sidebar.number_input("Potassium (K)", 0.0, 205.0, 40.0)
-temperature = st.sidebar.number_input("Temperature (°C)", 0.0, 50.0, 25.0)
-humidity = st.sidebar.number_input("Humidity (%)", 0.0, 100.0, 60.0)
-ph = st.sidebar.number_input("pH Level", 0.0, 14.0, 6.5)
-rainfall = st.sidebar.number_input("Rainfall (mm)", 0.0, 500.0, 200.0)
+nitrogen = st.sidebar.number_input("Nitrogen (N)", 0.0, 140.0, 0.0)
+phosphorus = st.sidebar.number_input("Phosphorus (P)", 0.0, 145.0, 0.0)
+potassium = st.sidebar.number_input("Potassium (K)", 0.0, 205.0, 0.0)
+temperature = st.sidebar.number_input("Temperature (°C)", 0.0, 50.0, 0.0)
+humidity = st.sidebar.number_input("Humidity (%)", 0.0, 100.0, 0.0)
+ph = st.sidebar.number_input("pH Level", 0.0, 14.0, 0.0)
+rainfall = st.sidebar.number_input("Rainfall (mm)", 0.0, 500.0, 0.0)
 
 if st.sidebar.button("Predict Crop"):
+
+    # Validation
+    if 0 in [nitrogen, phosphorus, potassium, temperature, humidity, ph, rainfall]:
+        st.error("⚠ कृपया सर्व मूल्ये भरा / Please enter all values")
+        st.stop()
 
     prediction = predict_crop(
         nitrogen, phosphorus, potassium,
@@ -163,7 +183,6 @@ if st.sidebar.button("Predict Crop"):
         st.info(f"📊 मॉडेल अचूकता: {round(accuracy*100,2)}%")
 
     plan = get_crop_plan(prediction, language)
-
     st.markdown("## 📋 Farmer Action Plan")
     st.text(plan)
 
