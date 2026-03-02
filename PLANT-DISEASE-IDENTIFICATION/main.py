@@ -1,227 +1,79 @@
 import streamlit as st
-import os
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import os
 
-# -----------------------------------------------------------
-# PAGE CONFIG (centered & compact)
-# -----------------------------------------------------------
-st.set_page_config(page_title="Agri🌾Next", layout="centered")
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(page_title="Agri 🌿 Next", layout="centered")
 
-# -----------------------------------------------------------
-# RAW IMAGE LINKS
-# -----------------------------------------------------------
-HERO_IMAGE = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Diseases.png"
+st.title("🌿 AgriNext - Plant Disease Identification")
+st.write("Upload a leaf image to detect plant disease.")
 
-IMG_REALTIME = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Real-Time%20Results.png"
-IMG_INSIGHTS = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Actionable%20Insights.png"
-IMG_DETECTION = "https://raw.githubusercontent.com/Rahul-9307/AgriNextCROP-RECOMMENDATION/main/PLANT-DISEASE-IDENTIFICATION/Disease%20Detection.png"
-
-# -----------------------------------------------------------
-# COMPACT / CENTERED CSS
-# -----------------------------------------------------------
-st.markdown("""
-<style>
-
-.block-container {
-    max-width: 900px;
-    padding-top: 10px;
-}
-
-/* HERO IMAGE CONTAINER */
-.hero-wrapper {
-    display: flex;
-    justify-content: center;
-}
-.hero-img {
-    margin-top: 51px;
-    width: 100%;
-    border-radius: 16px;
-    border: 2px solid #2ecc71;
-    box-shadow: 0px 0px 10px rgba(0,255,140,0.20);
-}
-
-.center-text { text-align: center; }
-
-.app-footer {
-    background:#111;
-    padding:10px;
-    border-radius:8px;
-    margin-top:20px;
-    text-align:center;
-    font-size:13px;
-    color:white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------------------
-# HERO IMAGE (centered & smaller)
-# -----------------------------------------------------------
-st.markdown(f"""
-<div class='hero-wrapper'>
-    <img src='{HERO_IMAGE}' class='hero-img'>
-</div>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------------------
-# PAGE SELECTOR (centered)
-# -----------------------------------------------------------
-cols = st.columns([1, 2, 1])
-with cols[1]:
-    page = st.selectbox("Select a Page", ["HOME", "DISEASE RECOGNITION"])
-
-# -----------------------------------------------------------
-# CLASS LABELS — MUST MATCH YOUR TRAINING ORDER
-# -----------------------------------------------------------
-CLASS_NAMES = [
-    "Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy",
-    "Blueberry___healthy", "Cherry___Powdery_mildew", "Cherry___healthy",
-    "Corn___Cercospora_leaf_spot Gray_leaf_spot", "Corn___Common_rust",
-    "Corn___Northern_Leaf_Blight", "Corn___healthy",
-    "Grape___Black_rot", "Grape___Esca_(Black_Measles)",
-    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)", "Grape___healthy",
-    "Orange___Haunglongbing_(Citrus_greening)",
-    "Peach___Bacterial_spot", "Peach___healthy",
-    "Pepper_bell___Bacterial_spot", "Pepper_bell___healthy",
-    "Potato___Early_blight", "Potato___Late_blight", "Potato___healthy",
-    "Raspberry___healthy", "Soybean___healthy",
-    "Squash___Powdery_mildew",
-    "Strawberry___Leaf_scorch", "Strawberry___healthy",
-    "Tomato___Bacterial_spot", "Tomato___Early_blight", "Tomato___Late_blight",
-    "Tomato___Leaf_Mold", "Tomato___Septoria_leaf_spot",
-    "Tomato___Spider_mites", "Tomato___Target_Spot",
-    "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
-    "Tomato___Tomato_mosaic_virus", "Tomato___healthy"
-]
-
-# -----------------------------------------------------------
-# AUTO MODEL LOADER (ERROR-FREE)
-# -----------------------------------------------------------
+# ---------------- MODEL LOADING ----------------
 @st.cache_resource
 def load_model():
-    target_name = "trained_plant_disease_model.keras"
-    found_path = None
+    model_path = "trained_plant_disease_model.keras"
 
-    for root, dirs, files in os.walk(".", topdown=True):
-        if target_name in files:
-            found_path = os.path.join(root, target_name)
-            break
+    if not os.path.exists(model_path):
+        st.error("Model file not found! Make sure 'trained_plant_disease_model.keras' exists.")
+        return None
 
-    # small inline status text (center)
-    st.markdown("<p class='center-text' style='color:#9dbfa8; font-size:13px;'>🔍 Searching for model... (compact)</p>", unsafe_allow_html=True)
+    model = tf.keras.models.load_model(model_path)
+    return model
 
-    if found_path:
-        st.success(f"✅ Model Found at: {found_path}")
-        return tf.keras.models.load_model(found_path)
-
-    st.error("❌ Model NOT FOUND! Upload trained_plant_disease_model.keras in your repo.")
-    return None
 
 model = load_model()
 
-# -----------------------------------------------------------
-# PREDICTION FUNCTION
-# -----------------------------------------------------------
-def predict_image(path):
-    img = tf.keras.preprocessing.image.load_img(path, target_size=(128, 128))
-    arr = np.expand_dims(tf.keras.preprocessing.image.img_to_array(img) / 255.0, 0)
-    pred = model.predict(arr)
-    idx = np.argmax(pred)
-    conf = np.max(pred)
-    return idx, CLASS_NAMES[idx], float(conf)
+# ---------------- CLASS LABELS ----------------
+class_names = [
+    'Apple___Apple_scab',
+    'Apple___Black_rot',
+    'Apple___Cedar_apple_rust',
+    'Apple___healthy',
+    'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
+    'Corn_(maize)___Common_rust_',
+    'Corn_(maize)___Northern_Leaf_Blight',
+    'Corn_(maize)___healthy',
+    'Tomato___Bacterial_spot',
+    'Tomato___Early_blight',
+    'Tomato___Late_blight',
+    'Tomato___Leaf_Mold',
+    'Tomato___Septoria_leaf_spot',
+    'Tomato___Spider_mites Two-spotted_spider_mite',
+    'Tomato___Target_Spot',
+    'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
+    'Tomato___Tomato_mosaic_virus',
+    'Tomato___healthy'
+]
 
-# -----------------------------------------------------------
-# HOME PAGE
-# -----------------------------------------------------------
-if page == "HOME":
-    st.markdown("<h1 class='center-text' style='color:#2ecc71; font-weight:800;'>Agri🌾Next: Smart Disease Detection</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='center-text' style='color:#9aa; font-size:15px;'>AI-powered platform for accurate plant disease recognition.</p>", unsafe_allow_html=True)
+# ---------------- IMAGE PREPROCESS ----------------
+def preprocess_image(image):
+    target_size = (128, 128)
 
-    c1, c2, c3 = st.columns(3)
-    # smaller thumbnails to keep the UI compact and centered
-    with c1:
-        st.image(IMG_REALTIME, width=220)
-        st.markdown("<p class='center-text'><b>Real-Time Results</b></p>", unsafe_allow_html=True)
+    image = image.resize(target_size)
+    img_array = np.array(image)
+    img_array = img_array / 255.0  # Normalize
+    img_array = np.expand_dims(img_array, axis=0)
 
-    with c2:
-        st.image(IMG_INSIGHTS, width=220)
-        st.markdown("<p class='center-text'><b>Actionable Insights</b></p>", unsafe_allow_html=True)
-
-    with c3:
-        st.image(IMG_DETECTION, width=220)
-        st.markdown("<p class='center-text'><b>Disease Detection</b></p>", unsafe_allow_html=True)
-
-
-    # HOW IT WORKS SECTION (AT BOTTOM OF HOME PAGE)
-    st.markdown("""
-    <h2 style='text-align:center; margin-top:35px;'>How It Works 🔍</h2>
-    <div style='max-width:700px; margin:auto; font-size:17px; line-height:1.6;'>
-        <ol>
-            <li>Navigate to the <b>"Disease Recognition"</b> page.</li>
-            <li>Upload an image of the affected plant.</li>
-            <li>Get instant results along with disease information.</li>
-        </ol>
-    </div>
-    """, unsafe_allow_html=True)
+    return img_array
 
 
-# -----------------------------------------------------------
-# DISEASE RECOGNITION PAGE (compact)
-# -----------------------------------------------------------
-elif page == "DISEASE RECOGNITION":
-    st.markdown("<h2 class='center-text' style='color:#2ecc71;'>🌿 Disease Recognition</h2>", unsafe_allow_html=True)
-    st.markdown("<p class='center-text' style='color:#9aa;'>Upload a plant leaf image to detect disease.</p>", unsafe_allow_html=True)
+# ---------------- FILE UPLOAD ----------------
+uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "jpeg", "png"])
 
-    # Centered uploader
-    col_up1, col_up2, col_up3 = st.columns([1, 2, 1])
-    with col_up2:
-        uploaded = st.file_uploader("", type=["jpg", "jpeg", "png"])
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    if uploaded:
+    if model is not None:
+        processed_image = preprocess_image(image)
 
-        # 🔥 PERFECT CENTER IMAGE
-        img_left, img_center, img_right = st.columns([1, 2, 1])
-        with img_center:
-            st.image(uploaded, width=420)
+        prediction = model.predict(processed_image)
+        predicted_class = class_names[np.argmax(prediction)]
+        confidence = np.max(prediction) * 100
 
-        # Save temp file
-        temp_path = "uploaded_temp.jpg"
-        with open(temp_path, "wb") as f:
-            f.write(uploaded.getbuffer())
-
-        # 🔥 PERFECT CENTER BUTTON
-        btn_left, btn_center, btn_right = st.columns([1, 1, 1])
-        with btn_center:
-            detect = st.button("🔍 Detect Disease")
-
-        if detect:
-            if model is None:
-                st.error("❌ Model not loaded!")
-            else:
-                st.info("🔮 Predict by AgriNext Team")
-                idx, disease, conf = predict_image(temp_path)
-
-                # 🔥 Center result card
-                st.markdown(f"""
-                <div style='border:1px solid #2ecc71; padding:12px; border-radius:10px;
-                max-width:450px; margin:auto; text-align:center;'>
-                    <h3 style='color:#2ecc71;'>🌱 Predicted: <b>{disease}</b></h3>
-                    <p style='color:#ccc;'>Confidence: <b>{conf*100:.2f}%</b></p>
-                </div>
-                """, unsafe_allow_html=True)
-
-
-# -----------------------------------------------------------
-# FOOTER (compact)
-# -----------------------------------------------------------
-st.markdown("<div class='app-footer'>Developed by <b>Team Agri🌾Next</b> | Powered by Streamlit</div>", unsafe_allow_html=True)
-
-
-
-
-
-
-
-
+        st.success(f"🌱 Predicted Disease: {predicted_class}")
+        st.info(f"Confidence: {confidence:.2f}%")
+    else:
+        st.warning("Model not loaded properly.")                   main.py
