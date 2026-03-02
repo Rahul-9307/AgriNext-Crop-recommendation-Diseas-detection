@@ -3,24 +3,17 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 
-# -------------------------------
-# PAGE CONFIG
-# -------------------------------
 st.set_page_config(page_title="AgriNext 🌾 Disease Detection", layout="wide")
 
-# -------------------------------
-# LOAD MODEL ONLY ONCE (IMPORTANT)
-# -------------------------------
+# Load Model
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model("trained_plant_disease_model.keras")
+    return tf.keras.models.load_model("plant_disease_model.h5")
 
 model = load_model()
 
-# -------------------------------
-# CLASS LABELS
-# -------------------------------
-class_name = [
+# Class Labels
+class_names = [
     'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
     'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
     'Cherry_(including_sour)___healthy', 'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
@@ -38,56 +31,31 @@ class_name = [
     'Tomato___Tomato_mosaic_virus', 'Tomato___healthy'
 ]
 
-# -------------------------------
-# IMAGE PREDICTION FUNCTION
-# -------------------------------
-def model_prediction(test_image):
-    image = Image.open(test_image).convert("RGB")
+def predict_image(uploaded_file):
+    image = Image.open(uploaded_file).convert("RGB")
     image = image.resize((128, 128))
+    img_array = np.array(image) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    input_arr = np.array(image) / 255.0  # Normalization (VERY IMPORTANT)
-    input_arr = np.expand_dims(input_arr, axis=0)
+    prediction = model.predict(img_array)
+    index = np.argmax(prediction)
+    confidence = np.max(prediction)
 
-    predictions = model.predict(input_arr)
-    result_index = np.argmax(predictions)
-    confidence = np.max(predictions)
+    return class_names[index], confidence
 
-    return result_index, confidence
+st.title("🌿 Smart Plant Disease Detection")
 
-# -------------------------------
-# SIDEBAR
-# -------------------------------
-st.sidebar.title("🌾 AgriNext")
-app_mode = st.sidebar.selectbox("Select Page", ["HOME", "DISEASE RECOGNITION"])
+uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
 
-# -------------------------------
-# HOME PAGE
-# -------------------------------
-if app_mode == "HOME":
-    st.title("🌿 SMART PLANT DISEASE DETECTION SYSTEM")
-    st.write("Upload a leaf image to detect plant disease using Deep Learning.")
-    st.image("Diseases.png", use_column_width=True)
+if uploaded_file:
+    st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
 
-# -------------------------------
-# DISEASE RECOGNITION PAGE
-# -------------------------------
-elif app_mode == "DISEASE RECOGNITION":
+    if st.button("Predict Disease"):
+        with st.spinner("Analyzing..."):
+            label, confidence = predict_image(uploaded_file)
 
-    st.header("🔍 Plant Disease Recognition")
+        st.success(f"🌱 Prediction: {label}")
+        st.info(f"📊 Confidence: {round(confidence*100,2)}%")
 
-    test_image = st.file_uploader("📤 Upload a Leaf Image", type=["jpg", "png", "jpeg"])
-
-    if test_image is not None:
-        st.image(test_image, caption="Uploaded Image", use_column_width=True)
-
-        if st.button("🚀 Predict Disease"):
-            with st.spinner("Model is analyzing..."):
-                result_index, confidence = model_prediction(test_image)
-
-                predicted_label = class_name[result_index]
-
-                st.success(f"🌱 Predicted Disease: **{predicted_label}**")
-                st.info(f"📊 Confidence: **{round(confidence * 100, 2)}%**")
-
-                if confidence < 0.50:
-                    st.warning("⚠️ Low confidence prediction. Please upload a clearer leaf image.")
+        if confidence < 0.5:
+            st.warning("⚠️ Low confidence. Please upload a clearer image.")
